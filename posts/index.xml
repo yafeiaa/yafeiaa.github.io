@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>DomineCore Blogs</title>
-    <link>https://DomineCore.github.io/</link>
-    <description>Recent content on DomineCore Blogs</description>
+    <title>Posts on DomineCore Blogs</title>
+    <link>https://DomineCore.github.io/posts/</link>
+    <description>Recent content in Posts on DomineCore Blogs</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Wed, 01 Dec 2021 12:11:15 +0800</lastBuildDate>
-    <atom:link href="https://DomineCore.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://DomineCore.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Python｜drf常用view解析</title>
       <link>https://DomineCore.github.io/posts/drf%E5%B8%B8%E8%A7%81%E8%A7%86%E5%9B%BE%E5%89%96%E6%9E%90/</link>

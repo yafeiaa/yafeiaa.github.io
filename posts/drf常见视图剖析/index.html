@@ -1,0 +1,614 @@
+<!doctype html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready lg:text-base"
+  style="--bg: #fff"
+  lang="en-us"
+  dir="ltr"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>Python｜drf常用view解析 - DomineCore Blogs</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  
+  <meta name="description" content="1 APIView drf提供了一个继承自View类的APIView类，它比View多了一些好用的方法。
+由APIView来对请求对象进行再次封装，将django的HttpRequest变为drf的Request 返回Response而不是HttpResponse 捕获所有的APIException并进行响应 传入的请求通过APIView来进行认证、权限验证等操作 1.1 APIView的AOP APIView保持了View的特性，dispatch方法在APIView里也存在，它按照不同的请求方法将请求分发至某个函数来处理。
+继承自APIView的视图可以设置很多AOP(类属性)来进行认证、权限、频率、渲染等控制。
+.render_classes：设置渲染器 .parser_classes：设置解析器 .authentication_classes：设置认证器 .throttle_classes：设置频率控制器 .permission_classes：设置权限控制器 1.2 策略方法 APIView也提供了一些策略方法：
+.get_renderers(self) .get_parsers(self) .get_authenticators(self) .get_throttles(self) .get_permissions(self) .get_content_negotiator(self) .get_exception_handler(self) 这些策略方法会返回解析器、渲染器、频率控制器、权限控制器这些AOP的可调用对象列表：
+def get_renderers(self): &#34;&#34;&#34; Instantiates and returns the list of renderers that this view can use. &#34;&#34;&#34; return [renderer() for renderer in self.renderer_classes] def get_parsers(self): &#34;&#34;&#34; Instantiates and returns the list of parsers that this view can use. &#34;&#34;&#34; return [parser() for parser in self." />
+  <meta name="author" content="DomineCore" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="https://DomineCore.github.io/main.min.css" />
+
+  
+  
+  
+  
+  
+  <link rel="preload" as="image" href="https://DomineCore.github.io/theme.png" />
+
+  
+  
+  
+  
+  <link rel="preload" as="image" href="https://www.keaitupian.cn/cjpic/frombd/1/253/1304845061/1236498778.jpg" />
+  
+  
+
+  
+  
+  <link rel="preload" as="image" href="https://DomineCore.github.io/github.svg" />
+  
+  
+
+  
+  
+  <script
+    defer
+    src="https://DomineCore.github.io/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+  
+  
+
+  
+  <link
+    rel="icon"
+    href="https://DomineCore.github.io/favicon.ico"
+  />
+  <link
+    rel="apple-touch-icon"
+    href="https://DomineCore.github.io/apple-touch-icon.png"
+  />
+
+  
+  <meta name="generator" content="Hugo 0.121.1">
+
+  
+  
+  
+  
+  
+  <meta itemprop="name" content="Python｜drf常用view解析">
+<meta itemprop="description" content="1 APIView drf提供了一个继承自View类的APIView类，它比View多了一些好用的方法。
+由APIView来对请求对象进行再次封装，将django的HttpRequest变为drf的Request 返回Response而不是HttpResponse 捕获所有的APIException并进行响应 传入的请求通过APIView来进行认证、权限验证等操作 1.1 APIView的AOP APIView保持了View的特性，dispatch方法在APIView里也存在，它按照不同的请求方法将请求分发至某个函数来处理。
+继承自APIView的视图可以设置很多AOP(类属性)来进行认证、权限、频率、渲染等控制。
+.render_classes：设置渲染器 .parser_classes：设置解析器 .authentication_classes：设置认证器 .throttle_classes：设置频率控制器 .permission_classes：设置权限控制器 1.2 策略方法 APIView也提供了一些策略方法：
+.get_renderers(self) .get_parsers(self) .get_authenticators(self) .get_throttles(self) .get_permissions(self) .get_content_negotiator(self) .get_exception_handler(self) 这些策略方法会返回解析器、渲染器、频率控制器、权限控制器这些AOP的可调用对象列表：
+def get_renderers(self): &#34;&#34;&#34; Instantiates and returns the list of renderers that this view can use. &#34;&#34;&#34; return [renderer() for renderer in self.renderer_classes] def get_parsers(self): &#34;&#34;&#34; Instantiates and returns the list of parsers that this view can use. &#34;&#34;&#34; return [parser() for parser in self."><meta itemprop="datePublished" content="2021-12-01T12:11:15+08:00" />
+<meta itemprop="dateModified" content="2021-12-01T12:11:15+08:00" />
+<meta itemprop="wordCount" content="623">
+<meta itemprop="keywords" content="" />
+  
+  <meta property="og:title" content="Python｜drf常用view解析" />
+<meta property="og:description" content="1 APIView drf提供了一个继承自View类的APIView类，它比View多了一些好用的方法。
+由APIView来对请求对象进行再次封装，将django的HttpRequest变为drf的Request 返回Response而不是HttpResponse 捕获所有的APIException并进行响应 传入的请求通过APIView来进行认证、权限验证等操作 1.1 APIView的AOP APIView保持了View的特性，dispatch方法在APIView里也存在，它按照不同的请求方法将请求分发至某个函数来处理。
+继承自APIView的视图可以设置很多AOP(类属性)来进行认证、权限、频率、渲染等控制。
+.render_classes：设置渲染器 .parser_classes：设置解析器 .authentication_classes：设置认证器 .throttle_classes：设置频率控制器 .permission_classes：设置权限控制器 1.2 策略方法 APIView也提供了一些策略方法：
+.get_renderers(self) .get_parsers(self) .get_authenticators(self) .get_throttles(self) .get_permissions(self) .get_content_negotiator(self) .get_exception_handler(self) 这些策略方法会返回解析器、渲染器、频率控制器、权限控制器这些AOP的可调用对象列表：
+def get_renderers(self): &#34;&#34;&#34; Instantiates and returns the list of renderers that this view can use. &#34;&#34;&#34; return [renderer() for renderer in self.renderer_classes] def get_parsers(self): &#34;&#34;&#34; Instantiates and returns the list of parsers that this view can use. &#34;&#34;&#34; return [parser() for parser in self." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://DomineCore.github.io/posts/drf%E5%B8%B8%E8%A7%81%E8%A7%86%E5%9B%BE%E5%89%96%E6%9E%90/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-12-01T12:11:15+08:00" />
+<meta property="article:modified_time" content="2021-12-01T12:11:15+08:00" />
+
+
+  
+  <meta name="twitter:card" content="summary"/><meta name="twitter:title" content="Python｜drf常用view解析"/>
+<meta name="twitter:description" content="1 APIView drf提供了一个继承自View类的APIView类，它比View多了一些好用的方法。
+由APIView来对请求对象进行再次封装，将django的HttpRequest变为drf的Request 返回Response而不是HttpResponse 捕获所有的APIException并进行响应 传入的请求通过APIView来进行认证、权限验证等操作 1.1 APIView的AOP APIView保持了View的特性，dispatch方法在APIView里也存在，它按照不同的请求方法将请求分发至某个函数来处理。
+继承自APIView的视图可以设置很多AOP(类属性)来进行认证、权限、频率、渲染等控制。
+.render_classes：设置渲染器 .parser_classes：设置解析器 .authentication_classes：设置认证器 .throttle_classes：设置频率控制器 .permission_classes：设置权限控制器 1.2 策略方法 APIView也提供了一些策略方法：
+.get_renderers(self) .get_parsers(self) .get_authenticators(self) .get_throttles(self) .get_permissions(self) .get_content_negotiator(self) .get_exception_handler(self) 这些策略方法会返回解析器、渲染器、频率控制器、权限控制器这些AOP的可调用对象列表：
+def get_renderers(self): &#34;&#34;&#34; Instantiates and returns the list of renderers that this view can use. &#34;&#34;&#34; return [renderer() for renderer in self.renderer_classes] def get_parsers(self): &#34;&#34;&#34; Instantiates and returns the list of parsers that this view can use. &#34;&#34;&#34; return [parser() for parser in self."/>
+
+  
+  
+
+  
+  <link rel="canonical" href="https://DomineCore.github.io/posts/drf%E5%B8%B8%E8%A7%81%E8%A7%86%E5%9B%BE%E5%89%96%E6%9E%90/" />
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[4.5rem] max-w-[--w] px-8 lg:justify-center">
+  <div class="relative z-50 ltr:mr-auto rtl:ml-auto flex items-center">
+    <a class="-translate-y-[1px] text-2xl font-medium" href="https://DomineCore.github.io/"
+      >DomineCore Blogs</a
+    >
+    <div
+      class="btn-dark text-[0] ltr:ml-4 rtl:mr-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 ltr:-mr-8 rtl:-ml-8 flex h-[4.5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = '#fff'.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+    <nav class="lg:ml-12 lg:flex lg:flex-row lg:items-center lg:space-x-10 rtl:space-x-reverse">
+      
+      <a
+        class="block text-center text-xl leading-[5rem] lg:text-base lg:font-normal"
+        href="/posts/"
+        >文章</a
+      >
+      
+    </nav>
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 rtl:space-x-reverse dark:invert ltr:lg:ml-14 rtl:lg:mr-14 lg:mt-0 lg:items-center"
+    >
+      
+      <a
+        class="h-7 w-7 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/DomineCore"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-9rem)] max-w-[--w] px-8 pb-16 pt-14 dark:prose-invert"
+    >
+      
+
+<article>
+  <header class="mb-14">
+    <h1 class="!my-0 pb-2.5">Python｜drf常用view解析</h1>
+
+    
+    <div class="text-xs antialiased opacity-60">
+      
+      <time>Dec 1, 2021</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p><img src="image/image_eL4tGCOeJs.png" alt=""></p>
+<h2 id="1-apiview">1 APIView</h2>
+<p>drf提供了一个继承自View类的APIView类，它比View多了一些好用的方法。</p>
+<ol>
+<li>由APIView来对请求对象进行再次封装，将django的HttpRequest变为drf的Request</li>
+<li>返回Response而不是HttpResponse</li>
+<li>捕获所有的APIException并进行响应</li>
+<li>传入的请求通过APIView来进行认证、权限验证等操作</li>
+</ol>
+<h3 id="11-apiview的aop">1.1 APIView的AOP</h3>
+<p>APIView保持了View的特性，dispatch方法在APIView里也存在，它按照不同的请求方法将请求分发至某个函数来处理。</p>
+<p>继承自APIView的视图可以设置很多AOP(类属性)来进行认证、权限、频率、渲染等控制。</p>
+<ol>
+<li>.render_classes：设置渲染器</li>
+<li>.parser_classes：设置解析器</li>
+<li>.authentication_classes：设置认证器</li>
+<li>.throttle_classes：设置频率控制器</li>
+<li>.permission_classes：设置权限控制器</li>
+</ol>
+<h3 id="12-策略方法">1.2 策略方法</h3>
+<p>APIView也提供了一些策略方法：</p>
+<ol>
+<li>.get_renderers(self)</li>
+<li>.get_parsers(self)</li>
+<li>.get_authenticators(self)</li>
+<li>.get_throttles(self)</li>
+<li>.get_permissions(self)</li>
+<li>.get_content_negotiator(self)</li>
+<li>.get_exception_handler(self)</li>
+</ol>
+<p>这些策略方法会返回解析器、渲染器、频率控制器、权限控制器这些AOP的可调用对象列表：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_renderers</span>(self):
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        Instantiates and returns the list of renderers that this view can use.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> [renderer() <span style="color:#66d9ef">for</span> renderer <span style="color:#f92672">in</span> self<span style="color:#f92672">.</span>renderer_classes]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_parsers</span>(self):
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        Instantiates and returns the list of parsers that this view can use.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> [parser() <span style="color:#66d9ef">for</span> parser <span style="color:#f92672">in</span> self<span style="color:#f92672">.</span>parser_classes]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_authenticators</span>(self):
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        Instantiates and returns the list of authenticators that this view can use.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> [auth() <span style="color:#66d9ef">for</span> auth <span style="color:#f92672">in</span> self<span style="color:#f92672">.</span>authentication_classes]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_permissions</span>(self):
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        Instantiates and returns the list of permissions that this view requires.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> [permission() <span style="color:#66d9ef">for</span> permission <span style="color:#f92672">in</span> self<span style="color:#f92672">.</span>permission_classes]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_throttles</span>(self):
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        Instantiates and returns the list of throttles that this view uses.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> [throttle() <span style="color:#66d9ef">for</span> throttle <span style="color:#f92672">in</span> self<span style="color:#f92672">.</span>throttle_classes]
+</span></span></code></pre></div><h3 id="13-控制策略实现">1.3 控制策略实现</h3>
+<p>APIView如何实现权限、频率控制呢?在APIView内部实现了一些方法，在request分派到具体的处理方法（get、post）之前，它会自动调用一些策略进行验证：</p>
+<ol>
+<li>.check_permissions(self,request)</li>
+<li>.check_throttles(self,request)</li>
+<li>.perform_content_negotiation(self,request,force=False)</li>
+</ol>
+<p>这些方法的实现借助了上面提到的策略方法，比如在check_permissions中</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">check_permissions</span>(self, request):
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        Check if the request should be permitted.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        Raises an appropriate exception if the request is not permitted.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> permission <span style="color:#f92672">in</span> self<span style="color:#f92672">.</span>get_permissions():
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> permission<span style="color:#f92672">.</span>has_permission(request, self):
+</span></span><span style="display:flex;"><span>                self<span style="color:#f92672">.</span>permission_denied(
+</span></span><span style="display:flex;"><span>                    request,
+</span></span><span style="display:flex;"><span>                    message<span style="color:#f92672">=</span>getattr(permission, <span style="color:#e6db74">&#39;message&#39;</span>, <span style="color:#66d9ef">None</span>),
+</span></span><span style="display:flex;"><span>                    code<span style="color:#f92672">=</span>getattr(permission, <span style="color:#e6db74">&#39;code&#39;</span>, <span style="color:#66d9ef">None</span>)
+</span></span><span style="display:flex;"><span>                )
+</span></span></code></pre></div><p>check_permissions方法接收APIView封装的request，然后调用get_permissions()方法获取视图中允许的所有权限控制类，然后进行权限验证。</p>
+<h3 id="14方法调度中所做的工作">1.4方法调度中所做的工作</h3>
+<p>dispatch方法在APIView中起到request再封装、权限、认证、频率控制、方法调度的作用。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">dispatch</span>(self, request, <span style="color:#f92672">*</span>args, <span style="color:#f92672">**</span>kwargs):
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        `.dispatch()` is pretty much the same as Django&#39;s regular dispatch,
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        but with extra hooks for startup, finalize, and exception handling.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>args <span style="color:#f92672">=</span> args
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>kwargs <span style="color:#f92672">=</span> kwargs
+</span></span><span style="display:flex;"><span>        request <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>initialize_request(request, <span style="color:#f92672">*</span>args, <span style="color:#f92672">**</span>kwargs)
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>request <span style="color:#f92672">=</span> request
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>headers <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>default_response_headers  <span style="color:#75715e"># deprecate?</span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>            self<span style="color:#f92672">.</span>initial(request, <span style="color:#f92672">*</span>args, <span style="color:#f92672">**</span>kwargs)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># Get the appropriate handler method</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> request<span style="color:#f92672">.</span>method<span style="color:#f92672">.</span>lower() <span style="color:#f92672">in</span> self<span style="color:#f92672">.</span>http_method_names:
+</span></span><span style="display:flex;"><span>                handler <span style="color:#f92672">=</span> getattr(self, request<span style="color:#f92672">.</span>method<span style="color:#f92672">.</span>lower(),
+</span></span><span style="display:flex;"><span>                                  self<span style="color:#f92672">.</span>http_method_not_allowed)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>                handler <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>http_method_not_allowed
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            response <span style="color:#f92672">=</span> handler(request, <span style="color:#f92672">*</span>args, <span style="color:#f92672">**</span>kwargs)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span> <span style="color:#66d9ef">as</span> exc:
+</span></span><span style="display:flex;"><span>            response <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>handle_exception(exc)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>response <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>finalize_response(request, response, <span style="color:#f92672">*</span>args, <span style="color:#f92672">**</span>kwargs)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> self<span style="color:#f92672">.</span>response
+</span></span></code></pre></div><p>APIView中的dispatch对View的dispatch再次进行了改造，下面的这些方法起到了核心作用：</p>
+<ol>
+<li>
+<p>initialize_request(self，request，*args，**kwargs)</p>
+<p>initialize_request做了以下的工作，可以看到，它对request进行了再次封装，让request变成了drf中的Request</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">initialize_request</span>(self, request, <span style="color:#f92672">*</span>args, <span style="color:#f92672">**</span>kwargs):
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        Returns the initial request object.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        parser_context <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>get_parser_context(request)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> Request(
+</span></span><span style="display:flex;"><span>            request,
+</span></span><span style="display:flex;"><span>            parsers<span style="color:#f92672">=</span>self<span style="color:#f92672">.</span>get_parsers(),
+</span></span><span style="display:flex;"><span>            authenticators<span style="color:#f92672">=</span>self<span style="color:#f92672">.</span>get_authenticators(),
+</span></span><span style="display:flex;"><span>            negotiator<span style="color:#f92672">=</span>self<span style="color:#f92672">.</span>get_content_negotiator(),
+</span></span><span style="display:flex;"><span>            parser_context<span style="color:#f92672">=</span>parser_context
+</span></span><span style="display:flex;"><span>        ) 
+</span></span></code></pre></div></li>
+</ol>
+<p>2、initial(request, *args, **kwargs)</p>
+<p>在initial方法中，我们可以看到它在最后做了三个操作：</p>
+<ol>
+<li>perform_authentication 认证</li>
+<li>check_permissions 检查频率</li>
+<li>check_throttles 检查频率</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">initial</span>(self, request, <span style="color:#f92672">*</span>args, <span style="color:#f92672">**</span>kwargs):
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        Runs anything that needs to occur prior to calling the method handler.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>format_kwarg <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>get_format_suffix(<span style="color:#f92672">**</span>kwargs)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Perform content negotiation and store the accepted info on the request</span>
+</span></span><span style="display:flex;"><span>        neg <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>perform_content_negotiation(request)
+</span></span><span style="display:flex;"><span>        request<span style="color:#f92672">.</span>accepted_renderer, request<span style="color:#f92672">.</span>accepted_media_type <span style="color:#f92672">=</span> neg
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Determine the API version, if versioning is in use.</span>
+</span></span><span style="display:flex;"><span>        version, scheme <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>determine_version(request, <span style="color:#f92672">*</span>args, <span style="color:#f92672">**</span>kwargs)
+</span></span><span style="display:flex;"><span>        request<span style="color:#f92672">.</span>version, request<span style="color:#f92672">.</span>versioning_scheme <span style="color:#f92672">=</span> version, scheme
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Ensure that the incoming request is permitted</span>
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>perform_authentication(request)
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>check_permissions(request)
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>check_throttles(request)
+</span></span></code></pre></div><p>进行完request再封装和权限、认证、频率检查后dispatch开始进行方法调度，可以看到他会对不存在/不合法的请求方法进行对应的非法响应，将正确的响应通过反射分发到不同的方法进行处理。</p>
+<h2 id="2-genericapiview">2 GenericAPIView</h2>
+<p>GenericAPIView是APIView的子类，它添加了一些标准列表和详细视图的行为。</p>
+<p>在rest_framework中的generic模块中定义了GenericAPIView类，这个类提供了一些有关数据集、URL参数、过滤器、分页器等属性和方法：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># 类属性</span>
+</span></span><span style="display:flex;"><span>    queryset <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>    serializer_class <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># If you want to use object lookups other than pk, set &#39;lookup_field&#39;.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># For more complex lookup requirements override `get_object()`.</span>
+</span></span><span style="display:flex;"><span>    lookup_field <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;pk&#39;</span>
+</span></span><span style="display:flex;"><span>    lookup_url_kwarg <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># The filter backend classes to use for queryset filtering</span>
+</span></span><span style="display:flex;"><span>    filter_backends <span style="color:#f92672">=</span> api_settings<span style="color:#f92672">.</span>DEFAULT_FILTER_BACKENDS
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># The style to use for queryset pagination.</span>
+</span></span><span style="display:flex;"><span>    pagination_class <span style="color:#f92672">=</span> api_settings<span style="color:#f92672">.</span>DEFAULT_PAGINATION_CLASS
+</span></span></code></pre></div><p><img src="image/image_nywx99Helf.png" alt=""></p>
+<p>通过GenericAPIView提供的这些方法和属性，可以帮助我们用更少的业务代码编写相关业务逻辑。</p>
+<h3 id="使用gnericapiview进行数据分页">使用GnericAPIView进行数据分页</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">demo</span>(generics<span style="color:#f92672">.</span>GenericAPIView):
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    queryset<span style="color:#f92672">=</span>clubAdmin<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>all()
+</span></span><span style="display:flex;"><span>    serializer_class <span style="color:#f92672">=</span> clubAdminSerializer
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get</span>(self,request,<span style="color:#f92672">*</span>args,<span style="color:#f92672">**</span>kwargs):
+</span></span><span style="display:flex;"><span>        users <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>get_queryset()
+</span></span><span style="display:flex;"><span>        pager_users <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>paginate_queryset(queryset<span style="color:#f92672">=</span>users)
+</span></span><span style="display:flex;"><span>        user_sers <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>get_serializer(instance <span style="color:#f92672">=</span> pager_users,many<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> Response(user_sers<span style="color:#f92672">.</span>data)
+</span></span></code></pre></div><p>在业务视图中，首先设置queryset数据集、序列化类，并且使用默认的分页器</p>
+<p>然后定义get方法，在get方法中调用GnericAPIView中相关的方法来获取最终序列化的分页数据并返回</p>
+<p>到此为止，其实GenericAPIView的编写模式和APIView的编写模式具体查询逻辑没有太大区别，还是需要我们去查询数据实例、进行分页、然后再序列化。</p>
+<h2 id="3-genericviewset">3 GenericViewSet</h2>
+<p>GenericViewSet继承自GenericAPIView和ViewSetMixin类，并且在GnericViewSet类本身没有实现什么具体的方法。</p>
+<p>所以只能去关注ViewSetMixin类中封装了一些什么：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    This is the magic.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Overrides `.as_view()` so that it takes an `actions` keyword that performs
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    the binding of HTTP methods to actions on the Resource.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    For example, to create a concrete view binding the &#39;GET&#39; and &#39;POST&#39; methods
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    to the &#39;list&#39; and &#39;create&#39; actions...
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    view = MyViewSet.as_view({&#39;get&#39;: &#39;list&#39;, &#39;post&#39;: &#39;create&#39;})
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;&#34;&#34;</span>
+</span></span></code></pre></div><p>在ViewSetMixin类的注释中是这样描述的：ViewSetMixin重写了.as_view()方法以至于可以提供一种http方法到我们自定义方法名的映射关系。在使用ViewSetMixin视图时，需要在as_view()中传入一个字典，这个字典就是我们定义的http方法到视图方法的映射。</p>
+<p>所以GenericViewSet集合了ViewSetMixin和GenericAPIView的所有方法，它可以提供自定义视图请求方法名，也可以支持GenericAPIView中提供的规范化通用视图操作。</p>
+<h2 id="4-mixins和modelviewset">4 Mixins和ModelViewSet</h2>
+<p>minxins中提供的各种mixin类提供了基本的通用视图行为操作（增删改查）</p>
+<p>以ListModelMixin为例，我们先来分析一下它到底做了什么</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ListModelMixin</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    List a queryset.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">list</span>(self, request, <span style="color:#f92672">*</span>args, <span style="color:#f92672">**</span>kwargs):
+</span></span><span style="display:flex;"><span>        queryset <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>filter_queryset(self<span style="color:#f92672">.</span>get_queryset())
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        page <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>paginate_queryset(queryset)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> page <span style="color:#f92672">is</span> <span style="color:#f92672">not</span> <span style="color:#66d9ef">None</span>:
+</span></span><span style="display:flex;"><span>            serializer <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>get_serializer(page, many<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> self<span style="color:#f92672">.</span>get_paginated_response(serializer<span style="color:#f92672">.</span>data)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        serializer <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>get_serializer(queryset, many<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> Response(serializer<span style="color:#f92672">.</span>data)
+</span></span></code></pre></div><p>ListModelMixin类提供了一个list方法，它在内部利用一些在GenericAPIView类中实现的方法，帮我们把queryset中的数据进行分页、序列化操作后直接产生响应。</p>
+<p>所以只需要将我们的视图继承自ListModelMixin和GenericViewSet并且设置好queryset、pagination_class 、serializer_class以及as_view()中get到list的方法映射，视图类就可以直接访问到ListModelMixin的list方法自动帮我们产生所有数据的响应，减少了很多代码冗余。</p>
+<p>像ListModelMixin一样的类还有很多：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">CreateModelMixin</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    增加一个数据
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">RetrieveModelMinxin</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    查询单条数据
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ListModelMixin</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    查询列表数据
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">UpdateModelMixin</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    更新一条数据
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">DestroyModelMixin</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    删除一条数据
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  &#34;&#34;&#34;</span> 
+</span></span></code></pre></div><p>在很多场景都需要针对某个数据做增删改查操作，ModelViewSet就帮我们直接封装好了增删改查的基本业务操作：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ModelViewSet</span>(mixins<span style="color:#f92672">.</span>CreateModelMixin,
+</span></span><span style="display:flex;"><span>                   mixins<span style="color:#f92672">.</span>RetrieveModelMixin,
+</span></span><span style="display:flex;"><span>                   mixins<span style="color:#f92672">.</span>UpdateModelMixin,
+</span></span><span style="display:flex;"><span>                   mixins<span style="color:#f92672">.</span>DestroyModelMixin,
+</span></span><span style="display:flex;"><span>                   mixins<span style="color:#f92672">.</span>ListModelMixin,
+</span></span><span style="display:flex;"><span>                   GenericViewSet):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    A viewset that provides default `create()`, `retrieve()`, `update()`,
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    `partial_update()`, `destroy()` and `list()` actions.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">pass</span>
+</span></span></code></pre></div><p>到底是全量继承自ModelViewSet还是按需继承自mixins这就要看具体的业务需求。</p>
+</section>
+
+  
+  
+
+  
+  
+  
+  
+  <nav
+    class="mt-24 flex overflow-hidden rounded-xl bg-black/[3%] text-lg !leading-[1.2] *:flex *:w-1/2 *:items-center *:p-5 *:font-medium *:no-underline dark:bg-white/[8%] [&>*:hover]:bg-black/[2%] dark:[&>*:hover]:bg-white/[3%]"
+  >
+    
+    
+    <a class="ltr:ml-auto rtl:mr-auto justify-end pl-3" href="https://DomineCore.github.io/posts/vue.js%E5%BF%AB%E8%B7%91%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"
+      ><span>读书｜vue.js快跑</span><span class="ltr:ml-1.5 rtl:mr-1.5">→</span></a
+    >
+    
+  </nav>
+  
+  
+
+  
+  
+
+  
+  
+
+  
+
+
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="mx-auto flex h-[4.5rem] max-w-[--w] items-center px-8 text-xs uppercase tracking-wider opacity-60"
+>
+  <div class="mr-auto">
+  
+    &copy; 2024
+    <a class="link" href="https://DomineCore.github.io/">DomineCore Blogs</a>
+  
+  </div>
+  <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
+    >powered by hugo️️</a
+  >️
+  <a
+    class="link"
+    href="https://github.com/nanxiaobei/hugo-paper"
+    rel="noopener"
+    target="_blank"
+    >hugo-paper</a
+  >
+</footer>
+
+  </body>
+</html>

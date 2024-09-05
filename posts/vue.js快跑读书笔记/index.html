@@ -1,0 +1,647 @@
+<!doctype html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready lg:text-base"
+  style="--bg: #fff"
+  lang="en-us"
+  dir="ltr"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>读书｜vue.js快跑 - DomineCore Blogs</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  
+  <meta name="description" content="vue.js，一个渐进式JavaScript框架，借助其优秀的响应式设计，提供了简单的数据状态到视图状态的双向映射。从原生js到jqury，react····，框架设计者们都在探索视图和数据之间的松耦合，以至于可以直接通过改变数据来改变视图。vue是在众多探索者中的一个把view和state之间的关系处理的恰到好处的渐进式框架。
+为什么说它是渐进式呢？
+其实vue的核心功能就是前面说到的：提供一个简单的数据状态到视图状态到双向映射，它更像是一个视图引擎，帮助开发者消除数据与视图之间的高耦合。在vue官网中，把这个功能称为——“声明式渲染”。
+在vue生态中，我们可以通过添加组件系统，客户端路由，大规模状态管理，构建工具来让vue从一个“声明式渲染”引擎变为一个真正意义上的客户端开发框架，所以vue是“渐进式”的js框架（至少我是这么认为的，如果你有不同看法，洗耳恭听😄）。
+这篇文章笔者准备围绕vue的核心功能——声明式渲染来介绍vue的入门级单文件用法，后面再结合组件系统，vuex，vue-router，webpack/vite等来介绍vue等工程化用法。
+感受声明式渲染 我们前面提到，vue的核心就是它的声明式渲染，帮我们做好数据状态到视图状态的双向映射。
+在《vue.js快跑》一书中，用模版、指令、数据解释了vue的组成部分，通过这些组成部分可以实现vue的声明式渲染（这里我们暂且不讨论原理）：
+为正常的HTML添加特殊的属性——被称作指令——借助它来告诉vue我们想要实现的效果以及如何处理提供给它的数据。
+&lt;div id=&#34;app&#34;&gt; &lt;button v-on:click=&#34;change_show&#34;&gt;点我一下我就让你好看&lt;/button&gt; &lt;span v-show=&#34;show_word&#34;&gt;好看&lt;/span&gt; &lt;/div&gt; &lt;script&gt; new Vue({ el: &#39;#app&#39;, data: { show_word: false }, methods: { change_show:function(){ this.show_word = !this.show_word; } } }) &lt;/script&gt; 在上面的代码模型中。点击“点我一下我就让你好看”之后在页面上就会出现“好看”，在这个过程中，vue帮助我们实现了一个完整的交互和状态响应。
+如果要使用原生js来实现上面的功能，我们需要考虑每一个实现细节：
+1、捕获点击动作
+2、更改状态变量值
+3、根据改变后的状态变量值来渲染页面
+而在vue中，我们只需要把一个数据和一个改变数据的方法声明在script中，并且通过vue的指令将两者建立联系，就可以实现”声明一个数据，通过改变数据改变状态”，我们不需要再关注其他的东西，因为这些vue已经帮助我们做好了。
+v-if vs v-show 在前面的例子中我们已经了解到vue的声明式渲染大概是一个什么样子的，丰富的vue指令让我们可以更好的让数据和视图进行绑定。我们在前面的“点我一下就让你好看”的例子中使用了v-show这个指令，v-show指令是通过判断一个表达式或者变量的值是否为真来决定模版的渲染逻辑，它的作用有点像if语句。但实际上vue中也有专门的v-if用来控制条件渲染。
+首先看看这两个指令的作用：
+1、v-if：如果v-if指令的值为假，那么在渲染dom时，当前的元素就不会被插入dom
+2、v-show：如果v-show的值为假，那么在显示dom的时候，这个元素不会被显示，它是css级别的控制
+&lt;div v-if=&#34;true&#34;&gt; 😄 &lt;/div&gt; &lt;div v-if=&#34;false&#34;&gt; 👖 &lt;/div&gt; 上面的代码会被浏览器解析成这样的：
+&lt;div&gt; 😄 &lt;/div&gt; 从这里就可以看到，v-if指令的值为false的元素并不会被加入最终的html中。
+&lt;div v-show=&#34;true&#34;&gt; 😁 &lt;/div&gt; &lt;div v-show=&#34;false&#34;&gt; 👌 &lt;/div&gt; 浏览器解析这一段代码之后，它会产生这样的效果：" />
+  <meta name="author" content="DomineCore" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="https://DomineCore.github.io/main.min.css" />
+
+  
+  
+  
+  
+  
+  <link rel="preload" as="image" href="https://DomineCore.github.io/theme.png" />
+
+  
+  
+  
+  
+  <link rel="preload" as="image" href="https://www.keaitupian.cn/cjpic/frombd/1/253/1304845061/1236498778.jpg" />
+  
+  
+
+  
+  
+  <link rel="preload" as="image" href="https://DomineCore.github.io/github.svg" />
+  
+  
+
+  
+  
+  <script
+    defer
+    src="https://DomineCore.github.io/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+  
+  
+
+  
+  <link
+    rel="icon"
+    href="https://DomineCore.github.io/favicon.ico"
+  />
+  <link
+    rel="apple-touch-icon"
+    href="https://DomineCore.github.io/apple-touch-icon.png"
+  />
+
+  
+  <meta name="generator" content="Hugo 0.121.1">
+
+  
+  
+  
+  
+  
+  <meta itemprop="name" content="读书｜vue.js快跑">
+<meta itemprop="description" content="vue.js，一个渐进式JavaScript框架，借助其优秀的响应式设计，提供了简单的数据状态到视图状态的双向映射。从原生js到jqury，react····，框架设计者们都在探索视图和数据之间的松耦合，以至于可以直接通过改变数据来改变视图。vue是在众多探索者中的一个把view和state之间的关系处理的恰到好处的渐进式框架。
+为什么说它是渐进式呢？
+其实vue的核心功能就是前面说到的：提供一个简单的数据状态到视图状态到双向映射，它更像是一个视图引擎，帮助开发者消除数据与视图之间的高耦合。在vue官网中，把这个功能称为——“声明式渲染”。
+在vue生态中，我们可以通过添加组件系统，客户端路由，大规模状态管理，构建工具来让vue从一个“声明式渲染”引擎变为一个真正意义上的客户端开发框架，所以vue是“渐进式”的js框架（至少我是这么认为的，如果你有不同看法，洗耳恭听😄）。
+这篇文章笔者准备围绕vue的核心功能——声明式渲染来介绍vue的入门级单文件用法，后面再结合组件系统，vuex，vue-router，webpack/vite等来介绍vue等工程化用法。
+感受声明式渲染 我们前面提到，vue的核心就是它的声明式渲染，帮我们做好数据状态到视图状态的双向映射。
+在《vue.js快跑》一书中，用模版、指令、数据解释了vue的组成部分，通过这些组成部分可以实现vue的声明式渲染（这里我们暂且不讨论原理）：
+为正常的HTML添加特殊的属性——被称作指令——借助它来告诉vue我们想要实现的效果以及如何处理提供给它的数据。
+&lt;div id=&#34;app&#34;&gt; &lt;button v-on:click=&#34;change_show&#34;&gt;点我一下我就让你好看&lt;/button&gt; &lt;span v-show=&#34;show_word&#34;&gt;好看&lt;/span&gt; &lt;/div&gt; &lt;script&gt; new Vue({ el: &#39;#app&#39;, data: { show_word: false }, methods: { change_show:function(){ this.show_word = !this.show_word; } } }) &lt;/script&gt; 在上面的代码模型中。点击“点我一下我就让你好看”之后在页面上就会出现“好看”，在这个过程中，vue帮助我们实现了一个完整的交互和状态响应。
+如果要使用原生js来实现上面的功能，我们需要考虑每一个实现细节：
+1、捕获点击动作
+2、更改状态变量值
+3、根据改变后的状态变量值来渲染页面
+而在vue中，我们只需要把一个数据和一个改变数据的方法声明在script中，并且通过vue的指令将两者建立联系，就可以实现”声明一个数据，通过改变数据改变状态”，我们不需要再关注其他的东西，因为这些vue已经帮助我们做好了。
+v-if vs v-show 在前面的例子中我们已经了解到vue的声明式渲染大概是一个什么样子的，丰富的vue指令让我们可以更好的让数据和视图进行绑定。我们在前面的“点我一下就让你好看”的例子中使用了v-show这个指令，v-show指令是通过判断一个表达式或者变量的值是否为真来决定模版的渲染逻辑，它的作用有点像if语句。但实际上vue中也有专门的v-if用来控制条件渲染。
+首先看看这两个指令的作用：
+1、v-if：如果v-if指令的值为假，那么在渲染dom时，当前的元素就不会被插入dom
+2、v-show：如果v-show的值为假，那么在显示dom的时候，这个元素不会被显示，它是css级别的控制
+&lt;div v-if=&#34;true&#34;&gt; 😄 &lt;/div&gt; &lt;div v-if=&#34;false&#34;&gt; 👖 &lt;/div&gt; 上面的代码会被浏览器解析成这样的：
+&lt;div&gt; 😄 &lt;/div&gt; 从这里就可以看到，v-if指令的值为false的元素并不会被加入最终的html中。
+&lt;div v-show=&#34;true&#34;&gt; 😁 &lt;/div&gt; &lt;div v-show=&#34;false&#34;&gt; 👌 &lt;/div&gt; 浏览器解析这一段代码之后，它会产生这样的效果："><meta itemprop="datePublished" content="2021-07-05T20:14:45+08:00" />
+<meta itemprop="dateModified" content="2021-07-05T20:14:45+08:00" />
+<meta itemprop="wordCount" content="427">
+<meta itemprop="keywords" content="" />
+  
+  <meta property="og:title" content="读书｜vue.js快跑" />
+<meta property="og:description" content="vue.js，一个渐进式JavaScript框架，借助其优秀的响应式设计，提供了简单的数据状态到视图状态的双向映射。从原生js到jqury，react····，框架设计者们都在探索视图和数据之间的松耦合，以至于可以直接通过改变数据来改变视图。vue是在众多探索者中的一个把view和state之间的关系处理的恰到好处的渐进式框架。
+为什么说它是渐进式呢？
+其实vue的核心功能就是前面说到的：提供一个简单的数据状态到视图状态到双向映射，它更像是一个视图引擎，帮助开发者消除数据与视图之间的高耦合。在vue官网中，把这个功能称为——“声明式渲染”。
+在vue生态中，我们可以通过添加组件系统，客户端路由，大规模状态管理，构建工具来让vue从一个“声明式渲染”引擎变为一个真正意义上的客户端开发框架，所以vue是“渐进式”的js框架（至少我是这么认为的，如果你有不同看法，洗耳恭听😄）。
+这篇文章笔者准备围绕vue的核心功能——声明式渲染来介绍vue的入门级单文件用法，后面再结合组件系统，vuex，vue-router，webpack/vite等来介绍vue等工程化用法。
+感受声明式渲染 我们前面提到，vue的核心就是它的声明式渲染，帮我们做好数据状态到视图状态的双向映射。
+在《vue.js快跑》一书中，用模版、指令、数据解释了vue的组成部分，通过这些组成部分可以实现vue的声明式渲染（这里我们暂且不讨论原理）：
+为正常的HTML添加特殊的属性——被称作指令——借助它来告诉vue我们想要实现的效果以及如何处理提供给它的数据。
+&lt;div id=&#34;app&#34;&gt; &lt;button v-on:click=&#34;change_show&#34;&gt;点我一下我就让你好看&lt;/button&gt; &lt;span v-show=&#34;show_word&#34;&gt;好看&lt;/span&gt; &lt;/div&gt; &lt;script&gt; new Vue({ el: &#39;#app&#39;, data: { show_word: false }, methods: { change_show:function(){ this.show_word = !this.show_word; } } }) &lt;/script&gt; 在上面的代码模型中。点击“点我一下我就让你好看”之后在页面上就会出现“好看”，在这个过程中，vue帮助我们实现了一个完整的交互和状态响应。
+如果要使用原生js来实现上面的功能，我们需要考虑每一个实现细节：
+1、捕获点击动作
+2、更改状态变量值
+3、根据改变后的状态变量值来渲染页面
+而在vue中，我们只需要把一个数据和一个改变数据的方法声明在script中，并且通过vue的指令将两者建立联系，就可以实现”声明一个数据，通过改变数据改变状态”，我们不需要再关注其他的东西，因为这些vue已经帮助我们做好了。
+v-if vs v-show 在前面的例子中我们已经了解到vue的声明式渲染大概是一个什么样子的，丰富的vue指令让我们可以更好的让数据和视图进行绑定。我们在前面的“点我一下就让你好看”的例子中使用了v-show这个指令，v-show指令是通过判断一个表达式或者变量的值是否为真来决定模版的渲染逻辑，它的作用有点像if语句。但实际上vue中也有专门的v-if用来控制条件渲染。
+首先看看这两个指令的作用：
+1、v-if：如果v-if指令的值为假，那么在渲染dom时，当前的元素就不会被插入dom
+2、v-show：如果v-show的值为假，那么在显示dom的时候，这个元素不会被显示，它是css级别的控制
+&lt;div v-if=&#34;true&#34;&gt; 😄 &lt;/div&gt; &lt;div v-if=&#34;false&#34;&gt; 👖 &lt;/div&gt; 上面的代码会被浏览器解析成这样的：
+&lt;div&gt; 😄 &lt;/div&gt; 从这里就可以看到，v-if指令的值为false的元素并不会被加入最终的html中。
+&lt;div v-show=&#34;true&#34;&gt; 😁 &lt;/div&gt; &lt;div v-show=&#34;false&#34;&gt; 👌 &lt;/div&gt; 浏览器解析这一段代码之后，它会产生这样的效果：" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://DomineCore.github.io/posts/vue.js%E5%BF%AB%E8%B7%91%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-07-05T20:14:45+08:00" />
+<meta property="article:modified_time" content="2021-07-05T20:14:45+08:00" />
+
+
+  
+  <meta name="twitter:card" content="summary"/><meta name="twitter:title" content="读书｜vue.js快跑"/>
+<meta name="twitter:description" content="vue.js，一个渐进式JavaScript框架，借助其优秀的响应式设计，提供了简单的数据状态到视图状态的双向映射。从原生js到jqury，react····，框架设计者们都在探索视图和数据之间的松耦合，以至于可以直接通过改变数据来改变视图。vue是在众多探索者中的一个把view和state之间的关系处理的恰到好处的渐进式框架。
+为什么说它是渐进式呢？
+其实vue的核心功能就是前面说到的：提供一个简单的数据状态到视图状态到双向映射，它更像是一个视图引擎，帮助开发者消除数据与视图之间的高耦合。在vue官网中，把这个功能称为——“声明式渲染”。
+在vue生态中，我们可以通过添加组件系统，客户端路由，大规模状态管理，构建工具来让vue从一个“声明式渲染”引擎变为一个真正意义上的客户端开发框架，所以vue是“渐进式”的js框架（至少我是这么认为的，如果你有不同看法，洗耳恭听😄）。
+这篇文章笔者准备围绕vue的核心功能——声明式渲染来介绍vue的入门级单文件用法，后面再结合组件系统，vuex，vue-router，webpack/vite等来介绍vue等工程化用法。
+感受声明式渲染 我们前面提到，vue的核心就是它的声明式渲染，帮我们做好数据状态到视图状态的双向映射。
+在《vue.js快跑》一书中，用模版、指令、数据解释了vue的组成部分，通过这些组成部分可以实现vue的声明式渲染（这里我们暂且不讨论原理）：
+为正常的HTML添加特殊的属性——被称作指令——借助它来告诉vue我们想要实现的效果以及如何处理提供给它的数据。
+&lt;div id=&#34;app&#34;&gt; &lt;button v-on:click=&#34;change_show&#34;&gt;点我一下我就让你好看&lt;/button&gt; &lt;span v-show=&#34;show_word&#34;&gt;好看&lt;/span&gt; &lt;/div&gt; &lt;script&gt; new Vue({ el: &#39;#app&#39;, data: { show_word: false }, methods: { change_show:function(){ this.show_word = !this.show_word; } } }) &lt;/script&gt; 在上面的代码模型中。点击“点我一下我就让你好看”之后在页面上就会出现“好看”，在这个过程中，vue帮助我们实现了一个完整的交互和状态响应。
+如果要使用原生js来实现上面的功能，我们需要考虑每一个实现细节：
+1、捕获点击动作
+2、更改状态变量值
+3、根据改变后的状态变量值来渲染页面
+而在vue中，我们只需要把一个数据和一个改变数据的方法声明在script中，并且通过vue的指令将两者建立联系，就可以实现”声明一个数据，通过改变数据改变状态”，我们不需要再关注其他的东西，因为这些vue已经帮助我们做好了。
+v-if vs v-show 在前面的例子中我们已经了解到vue的声明式渲染大概是一个什么样子的，丰富的vue指令让我们可以更好的让数据和视图进行绑定。我们在前面的“点我一下就让你好看”的例子中使用了v-show这个指令，v-show指令是通过判断一个表达式或者变量的值是否为真来决定模版的渲染逻辑，它的作用有点像if语句。但实际上vue中也有专门的v-if用来控制条件渲染。
+首先看看这两个指令的作用：
+1、v-if：如果v-if指令的值为假，那么在渲染dom时，当前的元素就不会被插入dom
+2、v-show：如果v-show的值为假，那么在显示dom的时候，这个元素不会被显示，它是css级别的控制
+&lt;div v-if=&#34;true&#34;&gt; 😄 &lt;/div&gt; &lt;div v-if=&#34;false&#34;&gt; 👖 &lt;/div&gt; 上面的代码会被浏览器解析成这样的：
+&lt;div&gt; 😄 &lt;/div&gt; 从这里就可以看到，v-if指令的值为false的元素并不会被加入最终的html中。
+&lt;div v-show=&#34;true&#34;&gt; 😁 &lt;/div&gt; &lt;div v-show=&#34;false&#34;&gt; 👌 &lt;/div&gt; 浏览器解析这一段代码之后，它会产生这样的效果："/>
+
+  
+  
+
+  
+  <link rel="canonical" href="https://DomineCore.github.io/posts/vue.js%E5%BF%AB%E8%B7%91%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/" />
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[4.5rem] max-w-[--w] px-8 lg:justify-center">
+  <div class="relative z-50 ltr:mr-auto rtl:ml-auto flex items-center">
+    <a class="-translate-y-[1px] text-2xl font-medium" href="https://DomineCore.github.io/"
+      >DomineCore Blogs</a
+    >
+    <div
+      class="btn-dark text-[0] ltr:ml-4 rtl:mr-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 ltr:-mr-8 rtl:-ml-8 flex h-[4.5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = '#fff'.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+    <nav class="lg:ml-12 lg:flex lg:flex-row lg:items-center lg:space-x-10 rtl:space-x-reverse">
+      
+      <a
+        class="block text-center text-xl leading-[5rem] lg:text-base lg:font-normal"
+        href="/posts/"
+        >文章</a
+      >
+      
+    </nav>
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 rtl:space-x-reverse dark:invert ltr:lg:ml-14 rtl:lg:mr-14 lg:mt-0 lg:items-center"
+    >
+      
+      <a
+        class="h-7 w-7 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/DomineCore"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-9rem)] max-w-[--w] px-8 pb-16 pt-14 dark:prose-invert"
+    >
+      
+
+<article>
+  <header class="mb-14">
+    <h1 class="!my-0 pb-2.5">读书｜vue.js快跑</h1>
+
+    
+    <div class="text-xs antialiased opacity-60">
+      
+      <time>Jul 5, 2021</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p><img src="/image/image_NY2X1a4XEO.png" alt="">
+vue.js，一个渐进式JavaScript框架，借助其优秀的响应式设计，提供了简单的数据状态到视图状态的双向映射。从原生js到jqury，react····，框架设计者们都在探索视图和数据之间的松耦合，以至于可以直接通过改变数据来改变视图。vue是在众多探索者中的一个把view和state之间的关系处理的恰到好处的渐进式框架。</p>
+<p>为什么说它是渐进式呢？</p>
+<p>其实vue的核心功能就是前面说到的：提供一个简单的数据状态到视图状态到双向映射，它更像是一个视图引擎，帮助开发者消除数据与视图之间的高耦合。在vue官网中，把这个功能称为——“声明式渲染”。</p>
+<p>在vue生态中，我们可以通过添加组件系统，客户端路由，大规模状态管理，构建工具来让vue从一个“声明式渲染”引擎变为一个真正意义上的客户端开发框架，所以vue是“渐进式”的js框架（至少我是这么认为的，如果你有不同看法，洗耳恭听😄）。</p>
+<p>这篇文章笔者准备围绕vue的核心功能——声明式渲染来介绍vue的入门级单文件用法，后面再结合组件系统，vuex，vue-router，webpack/vite等来介绍vue等工程化用法。</p>
+<h3 id="感受声明式渲染">感受声明式渲染</h3>
+<p>我们前面提到，vue的核心就是它的声明式渲染，帮我们做好数据状态到视图状态的双向映射。</p>
+<p>在《vue.js快跑》一书中，用模版、指令、数据解释了vue的组成部分，通过这些组成部分可以实现vue的声明式渲染（这里我们暂且不讨论原理）：</p>
+<blockquote>
+<p>为正常的HTML添加特殊的属性——被称作指令——借助它来告诉vue我们想要实现的效果以及如何处理提供给它的数据。</p>
+</blockquote>
+<pre tabindex="0"><code>&lt;div id=&#34;app&#34;&gt;
+  &lt;button v-on:click=&#34;change_show&#34;&gt;点我一下我就让你好看&lt;/button&gt;
+  &lt;span v-show=&#34;show_word&#34;&gt;好看&lt;/span&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  new Vue({
+    el: &#39;#app&#39;,
+    data: {
+      show_word: false 
+    },
+    methods: {
+      change_show:function(){
+        this.show_word = !this.show_word;
+      }
+    }
+  })
+&lt;/script&gt;
+</code></pre><p>在上面的代码模型中。点击“点我一下我就让你好看”之后在页面上就会出现“好看”，在这个过程中，vue帮助我们实现了一个完整的交互和状态响应。</p>
+<p>如果要使用原生js来实现上面的功能，我们需要考虑每一个实现细节：</p>
+<p>1、捕获点击动作</p>
+<p>2、更改状态变量值</p>
+<p>3、根据改变后的状态变量值来渲染页面</p>
+<p>而在vue中，我们只需要把一个数据和一个改变数据的方法声明在script中，并且通过vue的指令将两者建立联系，就可以实现”声明一个数据，通过改变数据改变状态”，我们不需要再关注其他的东西，因为这些vue已经帮助我们做好了。</p>
+<h3 id="v-if-vs-v-show">v-if vs v-show</h3>
+<p>在前面的例子中我们已经了解到vue的声明式渲染大概是一个什么样子的，丰富的vue指令让我们可以更好的让数据和视图进行绑定。我们在前面的“点我一下就让你好看”的例子中使用了v-show这个指令，v-show指令是通过判断一个表达式或者变量的值是否为真来决定模版的渲染逻辑，它的作用有点像if语句。但实际上vue中也有专门的v-if用来控制条件渲染。</p>
+<p>首先看看这两个指令的作用：</p>
+<p>1、v-if：如果v-if指令的值为假，那么在渲染dom时，当前的元素就不会被插入dom</p>
+<p>2、v-show：如果v-show的值为假，那么在显示dom的时候，这个元素不会被显示，它是css级别的控制</p>
+<pre tabindex="0"><code>&lt;div v-if=&#34;true&#34;&gt;
+  😄
+&lt;/div&gt;
+&lt;div v-if=&#34;false&#34;&gt;
+  👖
+&lt;/div&gt;
+</code></pre><p>上面的代码会被浏览器解析成这样的：</p>
+<pre tabindex="0"><code>&lt;div&gt;
+  😄
+&lt;/div&gt;
+</code></pre><p>从这里就可以看到，v-if指令的值为false的元素并不会被加入最终的html中。</p>
+<pre tabindex="0"><code>&lt;div v-show=&#34;true&#34;&gt;
+  😁
+&lt;/div&gt;
+&lt;div v-show=&#34;false&#34;&gt;
+  👌
+&lt;/div&gt;
+</code></pre><p>浏览器解析这一段代码之后，它会产生这样的效果：</p>
+<pre tabindex="0"><code>&lt;div&gt;
+  😁
+&lt;/div&gt;
+&lt;div style=&#34;display:none;&#34;&gt;
+  👌
+&lt;/div&gt;
+</code></pre><p>v-show指令的值不管是不是真，这个元素最终都会被加入最终的html中。</p>
+<p>所以我们就可以知道v-if的渲染逻辑是dom级别的，v-show是css级别的。如果在页面渲染完成之后，要改变v-if/v-show的值，使用v-if的就需要重新构建dom树来适应变化，而v-show只需要css改变一个值就可以实现。</p>
+<p>重构dom树和改变css适应变化的差别是很大的，前者需要相对多的时间和空间来进行操作，而后者则不需要，所以使用vue构建应用我们要特别注意的一点就是——<strong>尽可能的使用v-show而不是v-if</strong>。</p>
+<p>除了渲染逻辑的不一样，v-if比-v-show还多了一些东西，v-if支持if-if else-else的多分支，通过这个就可以实现在在模版中构建多分支。</p>
+<pre tabindex="0"><code>&lt;div v-if=&#34;state === 1&#34;&gt;
+  急忙加载中···
+&lt;/div&gt;
+&lt;div v-else-if=&#34;state === 2&#34;&gt;
+  完蛋，没加载出来😢
+&lt;/div&gt;
+&lt;div v-else=&#34;state === 3&#34;&gt;
+  当当当当，加载完了，但是我不想给你看😄
+&lt;/div&gt;
+</code></pre><p>相比原生JavaScript，这样很方便吧！</p>
+<p>但是使用的同时也不要忘记：v-if的状态改变会带来很大的性能开销，如果需要频繁的对某一个元素进行切换显示一定要使用v-show。</p>
+<p>比如：用vue做一个打地鼠对小游戏，我们就可以在页面上先绘制二十个坑，同时在这二十个坑里扔二十个地鼠，然后定义一个bool数组，让每个地鼠对应一个数组元素，我们只需要用js代码控制在同一时刻只有一个值为真，并且使用v-show来绑定每一个地鼠元素就可以实现了。试想：如果用v-if，我们每次都要进行重构dom，那么这个打地鼠游戏就会变得很佛系了。（有机会可以补充代码）</p>
+<p>v-if虽然性能不如v-show，但是在一些场景中，v-if还是v-show无法代替的：</p>
+<pre tabindex="0"><code>&lt;div id=&#34;app&#34;&gt;
+  &lt;div v-show=&#34;userinfo&#34;&gt;
+    &lt;span&gt;昵称:{{userinfo.nickname}}&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+  new Vue({
+    el:&#34;#app&#34;,
+    data:{
+      userinfo:undefined
+    }
+  });
+&lt;/script&gt;
+</code></pre><p>在上面的代码中，要实现这样一个需求：在用户登录后将用户信息加载到userinfo对象中，然后把nickname显示在页面上，用户如果没登陆，就暂不显示。</p>
+<p>这个需求的核心是——给一个暂时不存在的元素做渲染逻辑。</p>
+<p>为了防止重构dom带来性能下降，我们尝试使用v-show（暂且假设可以正常走）：</p>
+<p>首先，dom构建的过程中将所有元素构建好；然后，css引擎去判断v-show的值是否为真，如果为真就显示，否则就隐藏。</p>
+<p>看似好像没有什么问题，但实际上会是这样吗：在构建dom的过程中vue会尝试去获取userinfo.nickname（因为vue不会跳过v-show控制的元素）。但实际上获取不到，所以在这里vue会抛出异常。所以，要想实现这个需求，我们不得不使用v-if，尽管它有不小的性能开销。</p>
+<h3 id="v-for巧妙的模版循环">v-for：巧妙的模版循环</h3>
+<p>在使用原生JavaScript开发时期，要想在一个页面上实现渲染一个商品列表、新闻列表等这些对象数组，是一个很麻烦的事情。其中一个解决方案是：在JavaScript中对数组进行迭代，每次循环都去构建一个符合现实规范的html字符串，然后将每次循环的结果连接起来再渲染到页面上，这无疑是一个很麻烦的操作。在JavaScript中直接操作html就是一个耦合度很高的操作，很不好维护。</p>
+<p>vue通过v-for指令，让这个循环渲染直接在模版中实现，我们只需要在JavaScript中准备好这个对象数组：</p>
+<pre tabindex="0"><code>&lt;div id=&#34;app&#34;&gt;
+  &lt;span v-for=&#34;product in products&#34;&gt;{{product.name}}&lt;/span&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+  new Vue({
+    el:&#34;#app&#34;,
+    data:{
+      products:[
+        {name:&#34;矿泉水&#34;,price:&#34;2&#34;},
+        {name:&#34;可乐&#34;,price:&#34;3&#34;}
+      ]
+    }
+  })
+&lt;/script&gt;
+</code></pre><p>v-for后面的表达式，就很像python的for product in products，当然它也支持像python一样的 for name,price in products，这样在模版中就可以直接插入{{name}} {{price}}，而不是{{<a href="http://product.name" title="product.name">product.name</a>}}：</p>
+<pre tabindex="0"><code>&lt;div id=&#34;app&#34;&gt;  &lt;span v-for=&#34;(name,price) in products&#34;&gt;{{name}}的价格是{{price}}磅15便士&lt;/span&gt;&lt;/div&gt;
+</code></pre><p>除了支持通过key，value的形式去遍历对象，vue还支持对数组的索引和值进行遍历。</p>
+<pre tabindex="0"><code>&lt;div id=&#34;app&#34;&gt;  &lt;span v-for=&#34;(name,index) in persons&#34;&gt;编号{{index}}是个{{name}}😉&lt;/span&gt;&lt;/div&gt;&lt;script&gt;  new Vue({    el: &#34;#app&#34;,    data:{      persons:[        &#39;愣头青&#39;,&#39;好人&#39;,&#39;&#39;      ]    }  })&lt;/script&gt;
+</code></pre><p>上面的语法也很简单，只是我们一定要记住，参数的顺序必须是：先value再index。</p>
+<p>v-for更强大的地方是，它可以像python的range函数一样，支持生成一个迭代器。只不过v-for的迭代从1开始！</p>
+<p>我们只需要这样做，就可以生成1-100个数字。</p>
+<pre tabindex="0"><code>&lt;div v-for=&#34;n in 100&#34;&gt;  n&lt;/div&gt;
+</code></pre><p>使用这个迭代，我们就可以很方便的实现对数据在循环渲染的同时进行编号了（模版层面的，而不是js层面）。</p>
+<h3 id="v-bind将模版属性与数据绑定起来">v-bind：将模版属性与数据绑定起来</h3>
+<p>在html组件中，有很多各种各样的属性：name、value、placeholder····</p>
+<p>如果我们想再次降低js和模版的耦合，通过声明式来控制组件属性，我们只需要使用v-bind就可以了：</p>
+<pre tabindex="0"><code>&lt;div id=&#34;app&#34;&gt;  &lt;input v-bind:placeholder=&#34;input_placeholder&#34; /&gt;&lt;/div&gt;&lt;script&gt;  new Vue({    el:&#34;#app&#34;,    data: {      input_placeholder: &#34;填个东西吧这位大爷！&#34;    }  })&lt;/script&gt;
+</code></pre><p>v-bind:属性名=“变量”，vue就是这么简单好用！这个例子就表示，我要通过js来动态地控制placeholder，最终input框里会显示：“填个东西吧这位大爷！”，如果我们想实现一天不同的时段都使用不同的placeholder，我们可以这样：</p>
+<pre tabindex="0"><code>&lt;div id=&#34;app&#34;&gt;  &lt;input v-bind:placeholder=&#34;input_placeholder&#34; /&gt;&lt;/div&gt;&lt;script&gt;  let hours = new Date().getHours();  new Vue({    el:&#34;#app&#34;,    data: {      input_placeholder: &#34;填个东西吧这位大爷！现在已经是&#34;+hours+&#34;点钟了！&#34;    }  })&lt;/script&gt;  
+</code></pre><p>写代码时，我们还可以把v-bind省略，直接写冒号+属性名就可以。</p>
+<h3 id="双向数据绑定打通声明式的最后一站--getinputs">双向数据绑定：打通声明式的最后一站&ndash;getinputs</h3>
+<p>在此之前，我们介绍的所有内容都是通过js代码来控制模版的渲染，vue还添加了一些方法可以让我们直接声明式的获取用户输入。</p>
+<p>在上一板块中，我们说到v-bind用于绑定一个属性和变量的关系，我们可以通过js来改变属性值，那么能不能通过属性值的改变来触发js变量的改变呢？</p>
+<pre tabindex="0"><code>&lt;div id=&#34;app&#34;&gt;
+    &lt;input :value=&#34;inputvalue&#34;&gt;
+    &lt;span&gt;{{inputvalue}}&lt;/span&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  new Vue({ 
+      el: &#34;#app&#34;,
+      data: {      
+        inputvalue:&#34;&#34;    
+      }  
+  })
+&lt;/script&gt;
+</code></pre><p>如果能够实现，那么我们在input里输入的值应该会同步显示在span里，但是实际上span并不会同步我们的输入，因为v-bind只会提供js向模版的单向render，不会实现反向getinputs。</p>
+<p>要想实现，我们只需要借助v-model指令就可以实现“全双工”。</p>
+<pre tabindex="0"><code>&lt;div id=&#34;app&#34;&gt;
+  &lt;input v-model=&#34;inputvalue&#34;&gt;
+  &lt;span&gt;{{inputvalue}}&lt;/span&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  new Vue({    
+    el: &#34;#app&#34;,    
+    data: {      
+      inputvalue:&#34;&#34;    
+      }  
+    })
+&lt;/script&gt;
+</code></pre><p>对于其他的处理用户输入的元素也可以通过v-model实现双向数据绑定。</p>
+<h3 id="自带的插值xss防御">自带的插值xss防御</h3>
+<p>在前面我们一直在用一个从未提到的语法——插值，也就是使用双大括号的形式来讲变量显示在模版中，django、jinjia2也有这个语法，vue管它叫插值。</p>
+<p>如果你用过django的插值，或者你了解过web安全的相关知识吗，你就对xss一定不会陌生，xss：跨站脚本攻击，大概的意思就是：现在你的网站支持让用户发表大段文本，如果用户在这里写了一些JavaScript代码，（如果你没有做xss安全处理）浏览器就会自动运行这些JavaScript代码，这显然是不安全的（如果javascript代码中含有一些获取cookie的相关信息就很危险）。</p>
+<p>django的模版插值帮我们做了这些事，它会将用户的输入当作一个原生字符串而不是html代码，这就会组织浏览器的解析。</p>
+<p>vue和django的处理办法是一样的，它会认定双大括号包裹的变量值是原声字符串（普通文本）。这样就能保证插值的安全性。</p>
+<p>但是如果我们的需求就是渲染用户输入的html，应该怎么办？</p>
+<p>vue提供了一个v-html指令，用于帮助我们处理html渲染，但是在使用它的时候我们一定要注意手动处理xss，常见的方式就是字符替换，不允许script（总之就是给危险操作加限制，让用户不可输入，除非你对所有的用户都能做到绝对信任）。</p>
+<h3 id="vue对象的方法methods">vue对象的方法：methods</h3>
+<p>在vue对象中，有一个叫做methods的属性可以帮助我们定义一些当前vue对象特有的方法（函数）以便于帮我们实现代码复用和功能封装。</p>
+<p>下面的示例：接收一个从后端API直接传来的http响应，return一个data里有用的数据。</p>
+<pre tabindex="0"><code>&lt;script&gt;  new Vue({    el:&#34;#app&#34;,    data:{          },    methods:{      parse(response){        if response.status === 200{          const ret = response.data.data;          return ret;        }        return null;      }    }  })&lt;/script&gt;
+</code></pre><p>方法定义好了，我们如何调用？</p>
+<p>第一种方式：在插值中调用。</p>
+<pre tabindex="0"><code>&lt;div&gt;  {{parse(response=这里填一个真实的响应)}}&lt;/div&gt;
+</code></pre><p>但实际上，在这个场景下，直接在插值调用这个方法显然是不合理的。我们还可以在其他的方法里调用这个方法，也可以将方法与一个click事件绑定起来，也可以在vue的生命周期钩子里调用。实际上，在任何可以运行JavaScript表达式的地方都可以使用。</p>
+<p>在方法中调用另一个方法之前，我们先来熟悉一个概念：<strong>this</strong>。</p>
+<p>在methods中，this指向当前methos所在的vue组件，它类似于python的self，可以通过它在一个对象的内部访问这个对象和这个对象的属性、方法。</p>
+<p>所以，如果我们要在methods a中调用methosd b，我们可以这样：</p>
+<pre tabindex="0"><code>&lt;script&gt;  new Vue({    el:&#34;#app&#34;,    data:{      value: &#34;111&#34;    },    methods:{      a(){        return this.value;      }      b(){        return this.a();      }    }  })&lt;/script&gt;
+</code></pre><p>我们还可以在methods中通过this来访问data，就像方法a那样。（在后面，我们还会提到this更多的内容，这里暂且这样理解就足够了）</p>
+<h3 id="computed算出来的属性">computed：算出来的属性</h3>
+<p>computed是一种写起来像方法，用起来是属性的不可接受参数的“伪函数”（笔者暂且这么叫它）。</p>
+<p>如果data里有三个表示身高的变量，如果我们要在页面上显示一个平均身高，我们完全可以通过在插值语法中输入一段js代码进行计算：</p>
+<pre tabindex="0"><code>&lt;div id=&#34;app&#34;&gt;  &lt;span&gt;这平均身高可不行啊，{{(person_a+person_b+person_c)/3}}&lt;/span&gt;&lt;/div&gt;&lt;script&gt;  new Vue({    el:&#34;#app&#34;,    data: {      person_a:155,      person_b:170,      person_c:144    }  })&lt;/script&gt;
+</code></pre><p>但是这段代码就很麻烦，每次复用都要进行计算，我们能不能直接算出来一个结果，然后暂存起来（缓存），直接在插值调用，当有值更新时再算一次（监听变化）。那么很好，computed就帮我们实现了这一点：</p>
+<pre tabindex="0"><code>&lt;script&gt;  new Vue({    ···    computed:{      averge(){        return (this.person_a+this.person_b+this.person_c)/3;      }    }  })&lt;/script&gt;
+</code></pre><p>computed中的代码将一段计算表达式写在函数里，这样我们就可以使用既有属性算出来另外一些属性（有点mysql视图，python的@property的感觉）。</p>
+<p>computed中的计算属性支持缓存，也就是说不会每次调用都进行计算，它会暂存计算结果，当依赖的属性有变化时自动更新这个缓存。</p>
+<p>它看起来和methods长得一样，但是它不同于methods的时它不支持参数传递。我们可以直接在插值中用属性名的形式调用它，也可以在methods中使用this.属性名来调用。</p>
+<p>计算属性的应用场景非常多，比如你去某宝买东西，当你选择了三件商品，商品的总价格假设是100块钱，这个时候你又添加了一件商品（10块钱），商品的总价就会自动变为110块，这个就可以使用“computed+商品价格数组”来实现。</p>
+<p>我们只需要维护一个数组，数组里包含当前所选商品的信息（包含价格），然后在维护一个computed——allprice()，然后我们只需要在allprice函数中求数组里商品的和然后再renturn就可以。</p>
+<h3 id="监听器watchers监听属性变化异步设置computed-">监听器watchers：监听属性变化(异步设置computed )</h3>
+<p>监听器是vue帮我们实现好了的一种观察者模式实现手段，我们只需要在vue对象的watchers属性中定义一个“属性a()”这样的方法就可以实现在属性a发生变化时执行一些操作。（不限于data，还包括computed）</p>
+<p>计算属性和监听器有着相似的特点：监听属性的变化，然后做一些操作。</p>
+<p>但是监听器和计算属性不同的是，计算属性需要return，而监听器并不严格要求，这样就可以实现帮我们在watcher中实现监听一个属性的变化然后做相应的无返回操作。</p>
+<p>目前笔者还没有找到合适的应用场景（想了很多场景，但是使用计算属性和vue天生的响应式就可以实现），所以它的应用暂且留着吧，遇到了再补充。</p>
+<p>监听器有一个重要的特性是，它会<strong>保留变化前一刻的状态</strong>。</p>
+<pre tabindex="0"><code>watch:{  watchinput(value,oldvalue){    console.log(&#34;新数据&#34;,value);    console.log(&#34;老数据&#34;,oldvalue);  }}
+</code></pre><p>第一个参数是新数据，第二个参数是老数据，通常在这里可以感知到数据到底发生了什么变化。（应该可以实现温度上涨或者降低图标的自动变化）</p>
+<h3 id="vue处理交互的方式">vue处理交互的方式</h3>
+<p>目前为止，我们提到的唯一和交互相关的时双向数据绑定（这种交互式键盘输入式交互）。</p>
+<p>还有一些更复杂的由dom提供的基于事件的交互（比如click）vue也做了相关的方便的处理。</p>
+<p>V-on:click=&ldquo;xxx&rdquo;，这里的xxx是一段可执行的JavaScript代码，也可以是vue对象中的methods名，click是鼠标点击事件，这里也可以换成其他的<a href="https://www.runoob.com/jsref/dom-obj-event.html" title="dom支持的事件类型">dom支持的事件类型</a>。</p>
+<p>与v-bind指令类似，v-on指令可以简写成@：@click=“xxx”。</p>
+<p>下面的代码实现鼠标点击后弹框:</p>
+<pre tabindex="0"><code>&lt;div id=&#34;app&#34;&gt;  &lt;span @click=&#34;showToast&#34;&gt;点我呀🐶&lt;/span&gt;&lt;/div&gt;&lt;script&gt;  new Vue({    ···    methods:{      alert(&#34;对不起，您的电脑即将在5s内关机！&#34;)    }  })&lt;/script&gt;
+</code></pre><p>默认情况下，在嵌套式模版中，js的事件会向上冒泡：子组件事件触发会引起父组件事件触发。</p>
+<pre tabindex="0"><code>&lt;div @click=&#34;fatherclick&#34;&gt;  &lt;span @click=&#34;sonclick&#34;&gt;儿子犯法，老子坐牢&lt;/span&gt;&lt;/div&gt;&lt;script&gt;  ···  fatherclick(){    console.log(&#34;我是爸爸&#34;);  }    sonclick(){    console.log(&#34;我是儿子&#34;);  }  ···&lt;/script&gt;
+</code></pre><p>但是实际上这样并不能满足我们实际的精准事件触发要求，那么怎么办？</p>
+<p>vue提供了一种叫事件修饰符的语法，常见的：</p>
+<ol>
+<li>stop：阻止向上冒泡</li>
+<li>prevent：阻止事件的默认行为（阻止a标签的点击跳转，组织submit事件的重载页面）</li>
+<li>once：保证这个事件只会触发一次</li>
+<li>self：只有在这个事件源自本身才有效（儿子冒泡的不算）</li>
+</ol>
+<p>那么怎么用？</p>
+<p>我们只需要像这样：</p>
+<pre tabindex="0"><code>&lt;a href=&#34;http://www.qq.com/&#34; @click.prevent=&#34;nibiegeiwotiao&#34;&gt;&lt;/a&gt;
+</code></pre><p>在envent后加上一个.修饰符就ok了，很简洁。</p>
+<h3 id="vue生命周期钩子什么时候干什么事">vue生命周期钩子：什么时候干什么事</h3>
+<p>什么是生命周期，或者说什么是生命，生命就是一个东西从诞生开始，吃奶长大，然后慢慢死去。生命周期就表示这个过程。vue的生命周期包含了从一个vue对象的创建到销毁的整个过程，在这个过程中有一些特定的时间点，vue在这些特定的时间点安排了几个钩子。利用这些钩子，我们就可以实现在特定的时期干特定的事。</p>
+<p>先看看vue官网的一个图，在这个图里清楚的描述了vue的生命周期和生命周期钩子：</p>
+<p><a href="https://cn.vuejs.org/v2/guide/instance.html" title="😁点我查看">😁点我查看</a></p>
+<p>在vue生命周期中，有八个钩子，分别是：</p>
+<p>created/beforeCreate、mounted/beforeMounted、updated/beforeUpdated、destoryed/beforeDestoryed。</p>
+<p>他们分别对应着vue组件的创建、挂载（元素添加到dom的过程）、dom更改（update）、销毁四个关键节点。我们只需要在vue对象中填上对应的钩子名，然后像methods一样在里面可以写上一些JavaScript代码去帮助我们在特定时期执行特定的操作。</p>
+<p>到此，vue的单文件使用方式介绍已经结束了，还有一些没有提到的：ref、过滤器、自定义指令、过渡和动画效果等这些更炫酷的功能由于不常用（笔者不常用），所以暂且没有写出来，需要的时候去vue.js查阅就可以了，上面的内容都过于基础，只是笔者自己的学习总结，如果你有一切对我的质疑，我们一起交流😄。</p>
+</section>
+
+  
+  
+
+  
+  
+  
+  
+  <nav
+    class="mt-24 flex overflow-hidden rounded-xl bg-black/[3%] text-lg !leading-[1.2] *:flex *:w-1/2 *:items-center *:p-5 *:font-medium *:no-underline dark:bg-white/[8%] [&>*:hover]:bg-black/[2%] dark:[&>*:hover]:bg-white/[3%]"
+  >
+    
+    <a class="ltr:pr-3 rtl:pl-3" href="https://DomineCore.github.io/posts/drf%E5%B8%B8%E8%A7%81%E8%A7%86%E5%9B%BE%E5%89%96%E6%9E%90/"
+      ><span class="ltr:mr-1.5 rtl:ml-1.5">←</span><span>Python｜drf常用view解析</span></a
+    >
+    
+    
+  </nav>
+  
+  
+
+  
+  
+
+  
+  
+
+  
+
+
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="mx-auto flex h-[4.5rem] max-w-[--w] items-center px-8 text-xs uppercase tracking-wider opacity-60"
+>
+  <div class="mr-auto">
+  
+    &copy; 2024
+    <a class="link" href="https://DomineCore.github.io/">DomineCore Blogs</a>
+  
+  </div>
+  <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
+    >powered by hugo️️</a
+  >️
+  <a
+    class="link"
+    href="https://github.com/nanxiaobei/hugo-paper"
+    rel="noopener"
+    target="_blank"
+    >hugo-paper</a
+  >
+</footer>
+
+  </body>
+</html>

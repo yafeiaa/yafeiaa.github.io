@@ -2,9 +2,19 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://DomineCore.github.io/categories/</loc>
-  </url><url>
     <loc>https://DomineCore.github.io/</loc>
+    <lastmod>2021-12-01T12:11:15+08:00</lastmod>
+  </url><url>
+    <loc>https://DomineCore.github.io/posts/</loc>
+    <lastmod>2021-12-01T12:11:15+08:00</lastmod>
+  </url><url>
+    <loc>https://DomineCore.github.io/posts/drf%E5%B8%B8%E8%A7%81%E8%A7%86%E5%9B%BE%E5%89%96%E6%9E%90/</loc>
+    <lastmod>2021-12-01T12:11:15+08:00</lastmod>
+  </url><url>
+    <loc>https://DomineCore.github.io/posts/vue.js%E5%BF%AB%E8%B7%91%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/</loc>
+    <lastmod>2021-07-05T20:14:45+08:00</lastmod>
+  </url><url>
+    <loc>https://DomineCore.github.io/categories/</loc>
   </url><url>
     <loc>https://DomineCore.github.io/tags/</loc>
   </url>
