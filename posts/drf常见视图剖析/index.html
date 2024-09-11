@@ -120,7 +120,8 @@ def get_renderers(self):
         Instantiates and returns the list of throttles that this view uses.
         &#34;&#34;&#34;
         return [throttle() for throttle in self.throttle_classes]
-" />
+1.3 控制策略实现
+APIView如何实现权限、频率控制呢?在APIView内部实现了一些方法，在request分派到具体的处理方法（get、post）之前，它会自动调用一些策略进行验证：" />
   <meta name="author" content="DomineCore" />
   
 
@@ -177,7 +178,7 @@ def get_renderers(self):
   />
 
   
-  <meta name="generator" content="Hugo 0.134.1">
+  <meta name="generator" content="Hugo 0.134.2">
 
   
   
@@ -192,7 +193,7 @@ def get_renderers(self):
 继承自APIView的视图可以设置很多AOP(类属性)来进行认证、权限、频率、渲染等控制。
 .render_classes：设置渲染器 .parser_classes：设置解析器 .authentication_classes：设置认证器 .throttle_classes：设置频率控制器 .permission_classes：设置权限控制器 1.2 策略方法 APIView也提供了一些策略方法：
 .get_renderers(self) .get_parsers(self) .get_authenticators(self) .get_throttles(self) .get_permissions(self) .get_content_negotiator(self) .get_exception_handler(self) 这些策略方法会返回解析器、渲染器、频率控制器、权限控制器这些AOP的可调用对象列表：
-def get_renderers(self): &#34;&#34;&#34; Instantiates and returns the list of renderers that this view can use. &#34;&#34;&#34; return [renderer() for renderer in self.renderer_classes] def get_parsers(self): &#34;&#34;&#34; Instantiates and returns the list of parsers that this view can use. &#34;&#34;&#34; return [parser() for parser in self.parser_classes] def get_authenticators(self): &#34;&#34;&#34; Instantiates and returns the list of authenticators that this view can use. &#34;&#34;&#34; return [auth() for auth in self.authentication_classes] def get_permissions(self): &#34;&#34;&#34; Instantiates and returns the list of permissions that this view requires. &#34;&#34;&#34; return [permission() for permission in self.permission_classes] def get_throttles(self): &#34;&#34;&#34; Instantiates and returns the list of throttles that this view uses. &#34;&#34;&#34; return [throttle() for throttle in self.throttle_classes] ">
+def get_renderers(self): &#34;&#34;&#34; Instantiates and returns the list of renderers that this view can use. &#34;&#34;&#34; return [renderer() for renderer in self.renderer_classes] def get_parsers(self): &#34;&#34;&#34; Instantiates and returns the list of parsers that this view can use. &#34;&#34;&#34; return [parser() for parser in self.parser_classes] def get_authenticators(self): &#34;&#34;&#34; Instantiates and returns the list of authenticators that this view can use. &#34;&#34;&#34; return [auth() for auth in self.authentication_classes] def get_permissions(self): &#34;&#34;&#34; Instantiates and returns the list of permissions that this view requires. &#34;&#34;&#34; return [permission() for permission in self.permission_classes] def get_throttles(self): &#34;&#34;&#34; Instantiates and returns the list of throttles that this view uses. &#34;&#34;&#34; return [throttle() for throttle in self.throttle_classes] 1.3 控制策略实现 APIView如何实现权限、频率控制呢?在APIView内部实现了一些方法，在request分派到具体的处理方法（get、post）之前，它会自动调用一些策略进行验证：">
   <meta itemprop="datePublished" content="2021-12-01T12:11:15+08:00">
   <meta itemprop="dateModified" content="2021-12-01T12:11:15+08:00">
   <meta itemprop="wordCount" content="623">
@@ -206,7 +207,7 @@ def get_renderers(self): &#34;&#34;&#34; Instantiates and returns the list of re
 继承自APIView的视图可以设置很多AOP(类属性)来进行认证、权限、频率、渲染等控制。
 .render_classes：设置渲染器 .parser_classes：设置解析器 .authentication_classes：设置认证器 .throttle_classes：设置频率控制器 .permission_classes：设置权限控制器 1.2 策略方法 APIView也提供了一些策略方法：
 .get_renderers(self) .get_parsers(self) .get_authenticators(self) .get_throttles(self) .get_permissions(self) .get_content_negotiator(self) .get_exception_handler(self) 这些策略方法会返回解析器、渲染器、频率控制器、权限控制器这些AOP的可调用对象列表：
-def get_renderers(self): &#34;&#34;&#34; Instantiates and returns the list of renderers that this view can use. &#34;&#34;&#34; return [renderer() for renderer in self.renderer_classes] def get_parsers(self): &#34;&#34;&#34; Instantiates and returns the list of parsers that this view can use. &#34;&#34;&#34; return [parser() for parser in self.parser_classes] def get_authenticators(self): &#34;&#34;&#34; Instantiates and returns the list of authenticators that this view can use. &#34;&#34;&#34; return [auth() for auth in self.authentication_classes] def get_permissions(self): &#34;&#34;&#34; Instantiates and returns the list of permissions that this view requires. &#34;&#34;&#34; return [permission() for permission in self.permission_classes] def get_throttles(self): &#34;&#34;&#34; Instantiates and returns the list of throttles that this view uses. &#34;&#34;&#34; return [throttle() for throttle in self.throttle_classes] ">
+def get_renderers(self): &#34;&#34;&#34; Instantiates and returns the list of renderers that this view can use. &#34;&#34;&#34; return [renderer() for renderer in self.renderer_classes] def get_parsers(self): &#34;&#34;&#34; Instantiates and returns the list of parsers that this view can use. &#34;&#34;&#34; return [parser() for parser in self.parser_classes] def get_authenticators(self): &#34;&#34;&#34; Instantiates and returns the list of authenticators that this view can use. &#34;&#34;&#34; return [auth() for auth in self.authentication_classes] def get_permissions(self): &#34;&#34;&#34; Instantiates and returns the list of permissions that this view requires. &#34;&#34;&#34; return [permission() for permission in self.permission_classes] def get_throttles(self): &#34;&#34;&#34; Instantiates and returns the list of throttles that this view uses. &#34;&#34;&#34; return [throttle() for throttle in self.throttle_classes] 1.3 控制策略实现 APIView如何实现权限、频率控制呢?在APIView内部实现了一些方法，在request分派到具体的处理方法（get、post）之前，它会自动调用一些策略进行验证：">
   <meta property="og:locale" content="en_us">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
@@ -223,7 +224,7 @@ def get_renderers(self): &#34;&#34;&#34; Instantiates and returns the list of re
 继承自APIView的视图可以设置很多AOP(类属性)来进行认证、权限、频率、渲染等控制。
 .render_classes：设置渲染器 .parser_classes：设置解析器 .authentication_classes：设置认证器 .throttle_classes：设置频率控制器 .permission_classes：设置权限控制器 1.2 策略方法 APIView也提供了一些策略方法：
 .get_renderers(self) .get_parsers(self) .get_authenticators(self) .get_throttles(self) .get_permissions(self) .get_content_negotiator(self) .get_exception_handler(self) 这些策略方法会返回解析器、渲染器、频率控制器、权限控制器这些AOP的可调用对象列表：
-def get_renderers(self): &#34;&#34;&#34; Instantiates and returns the list of renderers that this view can use. &#34;&#34;&#34; return [renderer() for renderer in self.renderer_classes] def get_parsers(self): &#34;&#34;&#34; Instantiates and returns the list of parsers that this view can use. &#34;&#34;&#34; return [parser() for parser in self.parser_classes] def get_authenticators(self): &#34;&#34;&#34; Instantiates and returns the list of authenticators that this view can use. &#34;&#34;&#34; return [auth() for auth in self.authentication_classes] def get_permissions(self): &#34;&#34;&#34; Instantiates and returns the list of permissions that this view requires. &#34;&#34;&#34; return [permission() for permission in self.permission_classes] def get_throttles(self): &#34;&#34;&#34; Instantiates and returns the list of throttles that this view uses. &#34;&#34;&#34; return [throttle() for throttle in self.throttle_classes] ">
+def get_renderers(self): &#34;&#34;&#34; Instantiates and returns the list of renderers that this view can use. &#34;&#34;&#34; return [renderer() for renderer in self.renderer_classes] def get_parsers(self): &#34;&#34;&#34; Instantiates and returns the list of parsers that this view can use. &#34;&#34;&#34; return [parser() for parser in self.parser_classes] def get_authenticators(self): &#34;&#34;&#34; Instantiates and returns the list of authenticators that this view can use. &#34;&#34;&#34; return [auth() for auth in self.authentication_classes] def get_permissions(self): &#34;&#34;&#34; Instantiates and returns the list of permissions that this view requires. &#34;&#34;&#34; return [permission() for permission in self.permission_classes] def get_throttles(self): &#34;&#34;&#34; Instantiates and returns the list of throttles that this view uses. &#34;&#34;&#34; return [throttle() for throttle in self.throttle_classes] 1.3 控制策略实现 APIView如何实现权限、频率控制呢?在APIView内部实现了一些方法，在request分派到具体的处理方法（get、post）之前，它会自动调用一些策略进行验证：">
 
   
   
