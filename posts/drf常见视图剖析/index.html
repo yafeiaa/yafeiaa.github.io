@@ -178,7 +178,7 @@ APIView如何实现权限、频率控制呢?在APIView内部实现了一些方�
   />
 
   
-  <meta name="generator" content="Hugo 0.135.0">
+  <meta name="generator" content="Hugo 0.136.0">
 
   
   
@@ -187,8 +187,7 @@ APIView如何实现权限、频率控制呢?在APIView内部实现了一些方�
   
   
   <meta itemprop="name" content="Python｜drf常用view解析">
-  <meta itemprop="description" content="
-1 APIView drf提供了一个继承自View类的APIView类，它比View多了一些好用的方法。
+  <meta itemprop="description" content="1 APIView drf提供了一个继承自View类的APIView类，它比View多了一些好用的方法。
 由APIView来对请求对象进行再次封装，将django的HttpRequest变为drf的Request 返回Response而不是HttpResponse 捕获所有的APIException并进行响应 传入的请求通过APIView来进行认证、权限验证等操作 1.1 APIView的AOP APIView保持了View的特性，dispatch方法在APIView里也存在，它按照不同的请求方法将请求分发至某个函数来处理。
 继承自APIView的视图可以设置很多AOP(类属性)来进行认证、权限、频率、渲染等控制。
 .render_classes：设置渲染器 .parser_classes：设置解析器 .authentication_classes：设置认证器 .throttle_classes：设置频率控制器 .permission_classes：设置权限控制器 1.2 策略方法 APIView也提供了一些策略方法：
@@ -201,8 +200,7 @@ def get_renderers(self): &#34;&#34;&#34; Instantiates and returns the list of re
   <meta property="og:url" content="https://DomineCore.github.io/posts/drf%E5%B8%B8%E8%A7%81%E8%A7%86%E5%9B%BE%E5%89%96%E6%9E%90/">
   <meta property="og:site_name" content="DomineCore Blogs">
   <meta property="og:title" content="Python｜drf常用view解析">
-  <meta property="og:description" content="
-1 APIView drf提供了一个继承自View类的APIView类，它比View多了一些好用的方法。
+  <meta property="og:description" content="1 APIView drf提供了一个继承自View类的APIView类，它比View多了一些好用的方法。
 由APIView来对请求对象进行再次封装，将django的HttpRequest变为drf的Request 返回Response而不是HttpResponse 捕获所有的APIException并进行响应 传入的请求通过APIView来进行认证、权限验证等操作 1.1 APIView的AOP APIView保持了View的特性，dispatch方法在APIView里也存在，它按照不同的请求方法将请求分发至某个函数来处理。
 继承自APIView的视图可以设置很多AOP(类属性)来进行认证、权限、频率、渲染等控制。
 .render_classes：设置渲染器 .parser_classes：设置解析器 .authentication_classes：设置认证器 .throttle_classes：设置频率控制器 .permission_classes：设置权限控制器 1.2 策略方法 APIView也提供了一些策略方法：
@@ -218,8 +216,7 @@ def get_renderers(self): &#34;&#34;&#34; Instantiates and returns the list of re
   
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Python｜drf常用view解析">
-  <meta name="twitter:description" content="
-1 APIView drf提供了一个继承自View类的APIView类，它比View多了一些好用的方法。
+  <meta name="twitter:description" content="1 APIView drf提供了一个继承自View类的APIView类，它比View多了一些好用的方法。
 由APIView来对请求对象进行再次封装，将django的HttpRequest变为drf的Request 返回Response而不是HttpResponse 捕获所有的APIException并进行响应 传入的请求通过APIView来进行认证、权限验证等操作 1.1 APIView的AOP APIView保持了View的特性，dispatch方法在APIView里也存在，它按照不同的请求方法将请求分发至某个函数来处理。
 继承自APIView的视图可以设置很多AOP(类属性)来进行认证、权限、频率、渲染等控制。
 .render_classes：设置渲染器 .parser_classes：设置解析器 .authentication_classes：设置认证器 .throttle_classes：设置频率控制器 .permission_classes：设置权限控制器 1.2 策略方法 APIView也提供了一些策略方法：
