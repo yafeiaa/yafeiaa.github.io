@@ -61,17 +61,129 @@
   
   
   <meta name="description" content="
-在分布式系统中，grpc越来越受欢迎，被广泛用于微服务和C/S间的通信协议。本文介绍笔者在使用gRPC的过程中的一些想法和遇到的问题。
-目录：
+在分布式系统中，gRPC凭借其高性能和高效的通信方式，近年来越来越受欢迎，被广泛应用于微服务架构和客户端/服务器（C/S）之间的通信协议中。本文将分享我在使用gRPC过程中关于负载均衡和服务发现的一些实践经验、思考以及遇到的问题，并通过grpc-go的示例代码，深入探讨客户端负载均衡的实现。
+为什么选择gRPC？
+gRPC基于HTTP/2协议，支持多路复用、流控、头部压缩等特性，使其在性能和效率上优于传统的HTTP/1.x协议。此外，gRPC支持多种语言，方便跨语言服务间的通信，对于微服务架构的扩展性和灵活性提供了极大的支持。
+负载均衡的必要性
+在微服务架构中，一个服务通常有多个实例以应对高并发和高可用的需求。负载均衡负责将客户端的请求合理分配到各个服务实例上，以实现资源的有效利用和系统的高可用性。gRPC支持多种负载均衡策略，包括客户端负载均衡和服务端负载均衡。
+客户端负载均衡在gRPC中的实现
+在gRPC中，负载均衡可以在客户端实现，这样客户端能够直接感知到多个服务实例，并根据一定的策略进行请求分发。以下是使用grpc-go实现客户端负载均衡的示例。
+示例：使用Round Robin策略实现客户端负载均衡
 
-grpc需要特别关注负载均衡
-常用的grpc服务发现实现方式
-为什么需要服务网格
+安装依赖
+首先，确保已安装grpc-go。可以通过以下命令安装：
 
-grpc需要特别关注负载均衡
-负载均衡通常从实现方式上分为：服务端负载均衡和客户端负载均衡。在http/1.x协议中，我们一般都无脑采用服务端负载均衡，除非有什么特殊的用途。但是在http/2以及基于http/2的gRPC协议中，我们就需要进行特别的考虑。
-http2
-为了更加深入的了解，我们从http2开始说起。" />
+go get google.golang.org/grpc
+bash
+2. 自定义解析器和负载均衡器
+gRPC需要自定义服务发现和负载均衡策略，这里以Round Robin为例进行实现。
+package main
+
+import (
+    &#34;context&#34;
+    &#34;fmt&#34;
+    &#34;log&#34;
+    &#34;sync/atomic&#34;
+    &#34;time&#34;
+
+    &#34;google.golang.org/grpc&#34;
+    &#34;google.golang.org/grpc/resolver&#34;
+    &#34;google.golang.org/grpc/balancer&#34;
+    &#34;google.golang.org/grpc/balancer/base&#34;
+)
+
+// 定义服务地址
+const (
+    scheme = &#34;custom&#34;
+    serviceName = &#34;myService&#34;
+)
+
+// 解析器实现
+type customResolver struct {
+    target resolver.Target
+    cc     resolver.ClientConn
+    addrs  []resolver.Address
+}
+
+func (r *customResolver) Start() {
+    r.addrs = []resolver.Address{
+        {Addr: &#34;localhost:50051&#34;},
+        {Addr: &#34;localhost:50052&#34;},
+        {Addr: &#34;localhost:50053&#34;},
+    }
+    r.cc.UpdateState(resolver.State{Addresses: r.addrs})
+}
+
+func (r *customResolver) ResolveNow(o resolver.ResolveNowOptions) {}
+func (r *customResolver) Close() {}
+
+func newCustomResolver(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) resolver.Resolver {
+    cr := &amp;customResolver{
+        target: target,
+        cc:     cc,
+    }
+    cr.Start()
+    return cr
+}
+
+// 注册解析器
+func init() {
+    resolver.Register(&amp;resolver.Builder{
+        Scheme: scheme,
+        Build:  newCustomResolver,
+        // Deprecated: we use a separate build function
+    })
+}
+
+// 简单的Round Robin负载均衡器
+type roundRobinBalancer struct {
+    current uint64
+}
+
+func (b *roundRobinBalancer) Pick(info balancer.PickInfo) (balancer.PickResult, error) {
+    next := atomic.AddUint64(&amp;b.current, 1)
+    addr := info.CC().GetAddresses()[next%uint64(len(info.CC().GetAddresses()))]
+    return balancer.PickResult{SubConn: addr.SubConn, Done: func(info balancer.DoneInfo) {}}, nil
+}
+
+func newRoundRobinBuilder() balancer.Builder {
+    return base.NewBalancerBuilder(&#34;round_robin&#34;, &amp;roundRobinBalancer{}, base.Config{})
+}
+
+func main() {
+    // 注册负载均衡器
+    balancer.Register(newRoundRobinBuilder())
+
+    // 创建连接
+    conn, err := grpc.Dial(
+        fmt.Sprintf(&#34;%s:///%s&#34;, scheme, serviceName),
+        grpc.WithInsecure(),
+        grpc.WithBalancerName(&#34;round_robin&#34;),
+    )
+    if err != nil {
+        log.Fatalf(&#34;did not connect: %v&#34;, err)
+    }
+    defer conn.Close()
+
+    // 创建gRPC客户端
+    client := NewMyServiceClient(conn)
+
+    // 发起请求
+    for {
+        resp, err := client.MyMethod(context.Background(), &amp;MyRequest{})
+        if err != nil {
+            log.Printf(&#34;Error calling MyMethod: %v&#34;, err)
+        } else {
+            log.Printf(&#34;Response: %v&#34;, resp)
+        }
+        time.Sleep(1 * time.Second)
+    }
+}
+
+代码解析
+自定义解析器 (customResolver)：实现了resolver.Resolver接口，模拟服务发现过程。在实际应用中，可以从服务注册中心（如etcd、Consul）动态获取服务实例列表。
+
+注册解析器：使用resolver.Register注册自定义解析器，指定Scheme为custom。" />
   <meta name="author" content="yafeiaa" />
   
 
@@ -137,21 +249,25 @@ http2
   
   
   <meta itemprop="name" content="gRPC的负载均衡和服务发现">
-  <meta itemprop="description" content="在分布式系统中，grpc越来越受欢迎，被广泛用于微服务和C/S间的通信协议。本文介绍笔者在使用gRPC的过程中的一些想法和遇到的问题。
-目录：
-grpc需要特别关注负载均衡 常用的grpc服务发现实现方式 为什么需要服务网格 grpc需要特别关注负载均衡 负载均衡通常从实现方式上分为：服务端负载均衡和客户端负载均衡。在http/1.x协议中，我们一般都无脑采用服务端负载均衡，除非有什么特殊的用途。但是在http/2以及基于http/2的gRPC协议中，我们就需要进行特别的考虑。
-http2 为了更加深入的了解，我们从http2开始说起。">
+  <meta itemprop="description" content="在分布式系统中，gRPC凭借其高性能和高效的通信方式，近年来越来越受欢迎，被广泛应用于微服务架构和客户端/服务器（C/S）之间的通信协议中。本文将分享我在使用gRPC过程中关于负载均衡和服务发现的一些实践经验、思考以及遇到的问题，并通过grpc-go的示例代码，深入探讨客户端负载均衡的实现。
+为什么选择gRPC？ gRPC基于HTTP/2协议，支持多路复用、流控、头部压缩等特性，使其在性能和效率上优于传统的HTTP/1.x协议。此外，gRPC支持多种语言，方便跨语言服务间的通信，对于微服务架构的扩展性和灵活性提供了极大的支持。
+负载均衡的必要性 在微服务架构中，一个服务通常有多个实例以应对高并发和高可用的需求。负载均衡负责将客户端的请求合理分配到各个服务实例上，以实现资源的有效利用和系统的高可用性。gRPC支持多种负载均衡策略，包括客户端负载均衡和服务端负载均衡。
+客户端负载均衡在gRPC中的实现 在gRPC中，负载均衡可以在客户端实现，这样客户端能够直接感知到多个服务实例，并根据一定的策略进行请求分发。以下是使用grpc-go实现客户端负载均衡的示例。
+示例：使用Round Robin策略实现客户端负载均衡 安装依赖 首先，确保已安装grpc-go。可以通过以下命令安装： go get google.golang.org/grpc bash 2. 自定义解析器和负载均衡器 gRPC需要自定义服务发现和负载均衡策略，这里以Round Robin为例进行实现。
+package main import ( &#34;context&#34; &#34;fmt&#34; &#34;log&#34; &#34;sync/atomic&#34; &#34;time&#34; &#34;google.golang.org/grpc&#34; &#34;google.golang.org/grpc/resolver&#34; &#34;google.golang.org/grpc/balancer&#34; &#34;google.golang.org/grpc/balancer/base&#34; ) // 定义服务地址 const ( scheme = &#34;custom&#34; serviceName = &#34;myService&#34; ) // 解析器实现 type customResolver struct { target resolver.Target cc resolver.ClientConn addrs []resolver.Address } func (r *customResolver) Start() { r.addrs = []resolver.Address{ {Addr: &#34;localhost:50051&#34;}, {Addr: &#34;localhost:50052&#34;}, {Addr: &#34;localhost:50053&#34;}, } r.cc.UpdateState(resolver.State{Addresses: r.addrs}) } func (r *customResolver) ResolveNow(o resolver.ResolveNowOptions) {} func (r *customResolver) Close() {} func newCustomResolver(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) resolver.Resolver { cr := &amp;customResolver{ target: target, cc: cc, } cr.Start() return cr } // 注册解析器 func init() { resolver.Register(&amp;resolver.Builder{ Scheme: scheme, Build: newCustomResolver, // Deprecated: we use a separate build function }) } // 简单的Round Robin负载均衡器 type roundRobinBalancer struct { current uint64 } func (b *roundRobinBalancer) Pick(info balancer.PickInfo) (balancer.PickResult, error) { next := atomic.AddUint64(&amp;b.current, 1) addr := info.CC().GetAddresses()[next%uint64(len(info.CC().GetAddresses()))] return balancer.PickResult{SubConn: addr.SubConn, Done: func(info balancer.DoneInfo) {}}, nil } func newRoundRobinBuilder() balancer.Builder { return base.NewBalancerBuilder(&#34;round_robin&#34;, &amp;roundRobinBalancer{}, base.Config{}) } func main() { // 注册负载均衡器 balancer.Register(newRoundRobinBuilder()) // 创建连接 conn, err := grpc.Dial( fmt.Sprintf(&#34;%s:///%s&#34;, scheme, serviceName), grpc.WithInsecure(), grpc.WithBalancerName(&#34;round_robin&#34;), ) if err != nil { log.Fatalf(&#34;did not connect: %v&#34;, err) } defer conn.Close() // 创建gRPC客户端 client := NewMyServiceClient(conn) // 发起请求 for { resp, err := client.MyMethod(context.Background(), &amp;MyRequest{}) if err != nil { log.Printf(&#34;Error calling MyMethod: %v&#34;, err) } else { log.Printf(&#34;Response: %v&#34;, resp) } time.Sleep(1 * time.Second) } } 代码解析 自定义解析器 (customResolver)：实现了resolver.Resolver接口，模拟服务发现过程。在实际应用中，可以从服务注册中心（如etcd、Consul）动态获取服务实例列表。 注册解析器：使用resolver.Register注册自定义解析器，指定Scheme为custom。">
   <meta itemprop="datePublished" content="2024-09-27T14:22:00+08:00">
   <meta itemprop="dateModified" content="2024-09-27T14:22:00+08:00">
-  <meta itemprop="wordCount" content="9">
+  <meta itemprop="wordCount" content="445">
   
   <meta property="og:url" content="https://yafeiaa.github.io/posts/grpc%E7%9A%84%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E5%92%8C%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0/">
   <meta property="og:site_name" content="yafeiaa Blogs">
   <meta property="og:title" content="gRPC的负载均衡和服务发现">
-  <meta property="og:description" content="在分布式系统中，grpc越来越受欢迎，被广泛用于微服务和C/S间的通信协议。本文介绍笔者在使用gRPC的过程中的一些想法和遇到的问题。
-目录：
-grpc需要特别关注负载均衡 常用的grpc服务发现实现方式 为什么需要服务网格 grpc需要特别关注负载均衡 负载均衡通常从实现方式上分为：服务端负载均衡和客户端负载均衡。在http/1.x协议中，我们一般都无脑采用服务端负载均衡，除非有什么特殊的用途。但是在http/2以及基于http/2的gRPC协议中，我们就需要进行特别的考虑。
-http2 为了更加深入的了解，我们从http2开始说起。">
+  <meta property="og:description" content="在分布式系统中，gRPC凭借其高性能和高效的通信方式，近年来越来越受欢迎，被广泛应用于微服务架构和客户端/服务器（C/S）之间的通信协议中。本文将分享我在使用gRPC过程中关于负载均衡和服务发现的一些实践经验、思考以及遇到的问题，并通过grpc-go的示例代码，深入探讨客户端负载均衡的实现。
+为什么选择gRPC？ gRPC基于HTTP/2协议，支持多路复用、流控、头部压缩等特性，使其在性能和效率上优于传统的HTTP/1.x协议。此外，gRPC支持多种语言，方便跨语言服务间的通信，对于微服务架构的扩展性和灵活性提供了极大的支持。
+负载均衡的必要性 在微服务架构中，一个服务通常有多个实例以应对高并发和高可用的需求。负载均衡负责将客户端的请求合理分配到各个服务实例上，以实现资源的有效利用和系统的高可用性。gRPC支持多种负载均衡策略，包括客户端负载均衡和服务端负载均衡。
+客户端负载均衡在gRPC中的实现 在gRPC中，负载均衡可以在客户端实现，这样客户端能够直接感知到多个服务实例，并根据一定的策略进行请求分发。以下是使用grpc-go实现客户端负载均衡的示例。
+示例：使用Round Robin策略实现客户端负载均衡 安装依赖 首先，确保已安装grpc-go。可以通过以下命令安装： go get google.golang.org/grpc bash 2. 自定义解析器和负载均衡器 gRPC需要自定义服务发现和负载均衡策略，这里以Round Robin为例进行实现。
+package main import ( &#34;context&#34; &#34;fmt&#34; &#34;log&#34; &#34;sync/atomic&#34; &#34;time&#34; &#34;google.golang.org/grpc&#34; &#34;google.golang.org/grpc/resolver&#34; &#34;google.golang.org/grpc/balancer&#34; &#34;google.golang.org/grpc/balancer/base&#34; ) // 定义服务地址 const ( scheme = &#34;custom&#34; serviceName = &#34;myService&#34; ) // 解析器实现 type customResolver struct { target resolver.Target cc resolver.ClientConn addrs []resolver.Address } func (r *customResolver) Start() { r.addrs = []resolver.Address{ {Addr: &#34;localhost:50051&#34;}, {Addr: &#34;localhost:50052&#34;}, {Addr: &#34;localhost:50053&#34;}, } r.cc.UpdateState(resolver.State{Addresses: r.addrs}) } func (r *customResolver) ResolveNow(o resolver.ResolveNowOptions) {} func (r *customResolver) Close() {} func newCustomResolver(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) resolver.Resolver { cr := &amp;customResolver{ target: target, cc: cc, } cr.Start() return cr } // 注册解析器 func init() { resolver.Register(&amp;resolver.Builder{ Scheme: scheme, Build: newCustomResolver, // Deprecated: we use a separate build function }) } // 简单的Round Robin负载均衡器 type roundRobinBalancer struct { current uint64 } func (b *roundRobinBalancer) Pick(info balancer.PickInfo) (balancer.PickResult, error) { next := atomic.AddUint64(&amp;b.current, 1) addr := info.CC().GetAddresses()[next%uint64(len(info.CC().GetAddresses()))] return balancer.PickResult{SubConn: addr.SubConn, Done: func(info balancer.DoneInfo) {}}, nil } func newRoundRobinBuilder() balancer.Builder { return base.NewBalancerBuilder(&#34;round_robin&#34;, &amp;roundRobinBalancer{}, base.Config{}) } func main() { // 注册负载均衡器 balancer.Register(newRoundRobinBuilder()) // 创建连接 conn, err := grpc.Dial( fmt.Sprintf(&#34;%s:///%s&#34;, scheme, serviceName), grpc.WithInsecure(), grpc.WithBalancerName(&#34;round_robin&#34;), ) if err != nil { log.Fatalf(&#34;did not connect: %v&#34;, err) } defer conn.Close() // 创建gRPC客户端 client := NewMyServiceClient(conn) // 发起请求 for { resp, err := client.MyMethod(context.Background(), &amp;MyRequest{}) if err != nil { log.Printf(&#34;Error calling MyMethod: %v&#34;, err) } else { log.Printf(&#34;Response: %v&#34;, resp) } time.Sleep(1 * time.Second) } } 代码解析 自定义解析器 (customResolver)：实现了resolver.Resolver接口，模拟服务发现过程。在实际应用中，可以从服务注册中心（如etcd、Consul）动态获取服务实例列表。 注册解析器：使用resolver.Register注册自定义解析器，指定Scheme为custom。">
   <meta property="og:locale" content="en_us">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
@@ -162,10 +278,12 @@ http2 为了更加深入的了解，我们从http2开始说起。">
   
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="gRPC的负载均衡和服务发现">
-  <meta name="twitter:description" content="在分布式系统中，grpc越来越受欢迎，被广泛用于微服务和C/S间的通信协议。本文介绍笔者在使用gRPC的过程中的一些想法和遇到的问题。
-目录：
-grpc需要特别关注负载均衡 常用的grpc服务发现实现方式 为什么需要服务网格 grpc需要特别关注负载均衡 负载均衡通常从实现方式上分为：服务端负载均衡和客户端负载均衡。在http/1.x协议中，我们一般都无脑采用服务端负载均衡，除非有什么特殊的用途。但是在http/2以及基于http/2的gRPC协议中，我们就需要进行特别的考虑。
-http2 为了更加深入的了解，我们从http2开始说起。">
+  <meta name="twitter:description" content="在分布式系统中，gRPC凭借其高性能和高效的通信方式，近年来越来越受欢迎，被广泛应用于微服务架构和客户端/服务器（C/S）之间的通信协议中。本文将分享我在使用gRPC过程中关于负载均衡和服务发现的一些实践经验、思考以及遇到的问题，并通过grpc-go的示例代码，深入探讨客户端负载均衡的实现。
+为什么选择gRPC？ gRPC基于HTTP/2协议，支持多路复用、流控、头部压缩等特性，使其在性能和效率上优于传统的HTTP/1.x协议。此外，gRPC支持多种语言，方便跨语言服务间的通信，对于微服务架构的扩展性和灵活性提供了极大的支持。
+负载均衡的必要性 在微服务架构中，一个服务通常有多个实例以应对高并发和高可用的需求。负载均衡负责将客户端的请求合理分配到各个服务实例上，以实现资源的有效利用和系统的高可用性。gRPC支持多种负载均衡策略，包括客户端负载均衡和服务端负载均衡。
+客户端负载均衡在gRPC中的实现 在gRPC中，负载均衡可以在客户端实现，这样客户端能够直接感知到多个服务实例，并根据一定的策略进行请求分发。以下是使用grpc-go实现客户端负载均衡的示例。
+示例：使用Round Robin策略实现客户端负载均衡 安装依赖 首先，确保已安装grpc-go。可以通过以下命令安装： go get google.golang.org/grpc bash 2. 自定义解析器和负载均衡器 gRPC需要自定义服务发现和负载均衡策略，这里以Round Robin为例进行实现。
+package main import ( &#34;context&#34; &#34;fmt&#34; &#34;log&#34; &#34;sync/atomic&#34; &#34;time&#34; &#34;google.golang.org/grpc&#34; &#34;google.golang.org/grpc/resolver&#34; &#34;google.golang.org/grpc/balancer&#34; &#34;google.golang.org/grpc/balancer/base&#34; ) // 定义服务地址 const ( scheme = &#34;custom&#34; serviceName = &#34;myService&#34; ) // 解析器实现 type customResolver struct { target resolver.Target cc resolver.ClientConn addrs []resolver.Address } func (r *customResolver) Start() { r.addrs = []resolver.Address{ {Addr: &#34;localhost:50051&#34;}, {Addr: &#34;localhost:50052&#34;}, {Addr: &#34;localhost:50053&#34;}, } r.cc.UpdateState(resolver.State{Addresses: r.addrs}) } func (r *customResolver) ResolveNow(o resolver.ResolveNowOptions) {} func (r *customResolver) Close() {} func newCustomResolver(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) resolver.Resolver { cr := &amp;customResolver{ target: target, cc: cc, } cr.Start() return cr } // 注册解析器 func init() { resolver.Register(&amp;resolver.Builder{ Scheme: scheme, Build: newCustomResolver, // Deprecated: we use a separate build function }) } // 简单的Round Robin负载均衡器 type roundRobinBalancer struct { current uint64 } func (b *roundRobinBalancer) Pick(info balancer.PickInfo) (balancer.PickResult, error) { next := atomic.AddUint64(&amp;b.current, 1) addr := info.CC().GetAddresses()[next%uint64(len(info.CC().GetAddresses()))] return balancer.PickResult{SubConn: addr.SubConn, Done: func(info balancer.DoneInfo) {}}, nil } func newRoundRobinBuilder() balancer.Builder { return base.NewBalancerBuilder(&#34;round_robin&#34;, &amp;roundRobinBalancer{}, base.Config{}) } func main() { // 注册负载均衡器 balancer.Register(newRoundRobinBuilder()) // 创建连接 conn, err := grpc.Dial( fmt.Sprintf(&#34;%s:///%s&#34;, scheme, serviceName), grpc.WithInsecure(), grpc.WithBalancerName(&#34;round_robin&#34;), ) if err != nil { log.Fatalf(&#34;did not connect: %v&#34;, err) } defer conn.Close() // 创建gRPC客户端 client := NewMyServiceClient(conn) // 发起请求 for { resp, err := client.MyMethod(context.Background(), &amp;MyRequest{}) if err != nil { log.Printf(&#34;Error calling MyMethod: %v&#34;, err) } else { log.Printf(&#34;Response: %v&#34;, resp) } time.Sleep(1 * time.Second) } } 代码解析 自定义解析器 (customResolver)：实现了resolver.Resolver接口，模拟服务发现过程。在实际应用中，可以从服务注册中心（如etcd、Consul）动态获取服务实例列表。 注册解析器：使用resolver.Register注册自定义解析器，指定Scheme为custom。">
 
   
   
@@ -305,17 +423,256 @@ http2 为了更加深入的了解，我们从http2开始说起。">
   </header>
 
   <section><hr>
-<p>在分布式系统中，grpc越来越受欢迎，被广泛用于微服务和C/S间的通信协议。本文介绍笔者在使用gRPC的过程中的一些想法和遇到的问题。</p>
-<p>目录：</p>
+<p>在分布式系统中，gRPC凭借其高性能和高效的通信方式，近年来越来越受欢迎，被广泛应用于微服务架构和客户端/服务器（C/S）之间的通信协议中。本文将分享我在使用gRPC过程中关于负载均衡和服务发现的一些实践经验、思考以及遇到的问题，并通过grpc-go的示例代码，深入探讨客户端负载均衡的实现。</p>
+<h3 id="为什么选择grpc">为什么选择gRPC？</h3>
+<p>gRPC基于HTTP/2协议，支持多路复用、流控、头部压缩等特性，使其在性能和效率上优于传统的HTTP/1.x协议。此外，gRPC支持多种语言，方便跨语言服务间的通信，对于微服务架构的扩展性和灵活性提供了极大的支持。</p>
+<h3 id="负载均衡的必要性">负载均衡的必要性</h3>
+<p>在微服务架构中，一个服务通常有多个实例以应对高并发和高可用的需求。负载均衡负责将客户端的请求合理分配到各个服务实例上，以实现资源的有效利用和系统的高可用性。gRPC支持多种负载均衡策略，包括客户端负载均衡和服务端负载均衡。</p>
+<h3 id="客户端负载均衡在grpc中的实现">客户端负载均衡在gRPC中的实现</h3>
+<p>在gRPC中，负载均衡可以在客户端实现，这样客户端能够直接感知到多个服务实例，并根据一定的策略进行请求分发。以下是使用grpc-go实现客户端负载均衡的示例。</p>
+<h4 id="示例使用round-robin策略实现客户端负载均衡">示例：使用Round Robin策略实现客户端负载均衡</h4>
 <ol>
-<li>grpc需要特别关注负载均衡</li>
-<li>常用的grpc服务发现实现方式</li>
-<li>为什么需要服务网格</li>
+<li>安装依赖
+首先，确保已安装grpc-go。可以通过以下命令安装：</li>
 </ol>
-<h2 id="grpc需要特别关注负载均衡">grpc需要特别关注负载均衡</h2>
-<p>负载均衡通常从实现方式上分为：<code>服务端负载均衡</code>和<code>客户端负载均衡</code>。在http/1.x协议中，我们一般都无脑采用服务端负载均衡，除非有什么特殊的用途。但是在http/2以及基于http/2的gRPC协议中，我们就需要进行特别的考虑。</p>
-<h3 id="http2">http2</h3>
-<p>为了更加深入的了解，我们从http2开始说起。</p>
+<p>go get google.golang.org/grpc
+bash
+2. 自定义解析器和负载均衡器
+gRPC需要自定义服务发现和负载均衡策略，这里以Round Robin为例进行实现。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;context&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;fmt&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;log&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;sync/atomic&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;time&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;google.golang.org/grpc&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;google.golang.org/grpc/resolver&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;google.golang.org/grpc/balancer&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;google.golang.org/grpc/balancer/base&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 定义服务地址
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">scheme</span> = <span style="color:#e6db74">&#34;custom&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">serviceName</span> = <span style="color:#e6db74">&#34;myService&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 解析器实现
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">customResolver</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">target</span> <span style="color:#a6e22e">resolver</span>.<span style="color:#a6e22e">Target</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cc</span>     <span style="color:#a6e22e">resolver</span>.<span style="color:#a6e22e">ClientConn</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">addrs</span>  []<span style="color:#a6e22e">resolver</span>.<span style="color:#a6e22e">Address</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">customResolver</span>) <span style="color:#a6e22e">Start</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">addrs</span> = []<span style="color:#a6e22e">resolver</span>.<span style="color:#a6e22e">Address</span>{
+</span></span><span style="display:flex;"><span>        {<span style="color:#a6e22e">Addr</span>: <span style="color:#e6db74">&#34;localhost:50051&#34;</span>},
+</span></span><span style="display:flex;"><span>        {<span style="color:#a6e22e">Addr</span>: <span style="color:#e6db74">&#34;localhost:50052&#34;</span>},
+</span></span><span style="display:flex;"><span>        {<span style="color:#a6e22e">Addr</span>: <span style="color:#e6db74">&#34;localhost:50053&#34;</span>},
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">cc</span>.<span style="color:#a6e22e">UpdateState</span>(<span style="color:#a6e22e">resolver</span>.<span style="color:#a6e22e">State</span>{<span style="color:#a6e22e">Addresses</span>: <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">addrs</span>})
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">customResolver</span>) <span style="color:#a6e22e">ResolveNow</span>(<span style="color:#a6e22e">o</span> <span style="color:#a6e22e">resolver</span>.<span style="color:#a6e22e">ResolveNowOptions</span>) {}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">customResolver</span>) <span style="color:#a6e22e">Close</span>() {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">newCustomResolver</span>(<span style="color:#a6e22e">target</span> <span style="color:#a6e22e">resolver</span>.<span style="color:#a6e22e">Target</span>, <span style="color:#a6e22e">cc</span> <span style="color:#a6e22e">resolver</span>.<span style="color:#a6e22e">ClientConn</span>, <span style="color:#a6e22e">opts</span> <span style="color:#a6e22e">resolver</span>.<span style="color:#a6e22e">BuildOptions</span>) <span style="color:#a6e22e">resolver</span>.<span style="color:#a6e22e">Resolver</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cr</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">customResolver</span>{
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">target</span>: <span style="color:#a6e22e">target</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">cc</span>:     <span style="color:#a6e22e">cc</span>,
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cr</span>.<span style="color:#a6e22e">Start</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">cr</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 注册解析器
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">init</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">resolver</span>.<span style="color:#a6e22e">Register</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">resolver</span>.<span style="color:#a6e22e">Builder</span>{
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">Scheme</span>: <span style="color:#a6e22e">scheme</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">Build</span>:  <span style="color:#a6e22e">newCustomResolver</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Deprecated: we use a separate build function
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    })
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 简单的Round Robin负载均衡器
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">roundRobinBalancer</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">current</span> <span style="color:#66d9ef">uint64</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">b</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">roundRobinBalancer</span>) <span style="color:#a6e22e">Pick</span>(<span style="color:#a6e22e">info</span> <span style="color:#a6e22e">balancer</span>.<span style="color:#a6e22e">PickInfo</span>) (<span style="color:#a6e22e">balancer</span>.<span style="color:#a6e22e">PickResult</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">next</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">atomic</span>.<span style="color:#a6e22e">AddUint64</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">current</span>, <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">addr</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">info</span>.<span style="color:#a6e22e">CC</span>().<span style="color:#a6e22e">GetAddresses</span>()[<span style="color:#a6e22e">next</span><span style="color:#f92672">%</span>uint64(len(<span style="color:#a6e22e">info</span>.<span style="color:#a6e22e">CC</span>().<span style="color:#a6e22e">GetAddresses</span>()))]
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">balancer</span>.<span style="color:#a6e22e">PickResult</span>{<span style="color:#a6e22e">SubConn</span>: <span style="color:#a6e22e">addr</span>.<span style="color:#a6e22e">SubConn</span>, <span style="color:#a6e22e">Done</span>: <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">info</span> <span style="color:#a6e22e">balancer</span>.<span style="color:#a6e22e">DoneInfo</span>) {}}, <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">newRoundRobinBuilder</span>() <span style="color:#a6e22e">balancer</span>.<span style="color:#a6e22e">Builder</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">base</span>.<span style="color:#a6e22e">NewBalancerBuilder</span>(<span style="color:#e6db74">&#34;round_robin&#34;</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">roundRobinBalancer</span>{}, <span style="color:#a6e22e">base</span>.<span style="color:#a6e22e">Config</span>{})
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 注册负载均衡器
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">balancer</span>.<span style="color:#a6e22e">Register</span>(<span style="color:#a6e22e">newRoundRobinBuilder</span>())
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 创建连接
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">conn</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">grpc</span>.<span style="color:#a6e22e">Dial</span>(
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%s:///%s&#34;</span>, <span style="color:#a6e22e">scheme</span>, <span style="color:#a6e22e">serviceName</span>),
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">grpc</span>.<span style="color:#a6e22e">WithInsecure</span>(),
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">grpc</span>.<span style="color:#a6e22e">WithBalancerName</span>(<span style="color:#e6db74">&#34;round_robin&#34;</span>),
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;did not connect: %v&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">conn</span>.<span style="color:#a6e22e">Close</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 创建gRPC客户端
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">client</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">NewMyServiceClient</span>(<span style="color:#a6e22e">conn</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 发起请求
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">resp</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">MyMethod</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>(), <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">MyRequest</span>{})
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Error calling MyMethod: %v&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Response: %v&#34;</span>, <span style="color:#a6e22e">resp</span>)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#ae81ff">1</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ol start="3">
+<li>代码解析
+自定义解析器 (customResolver)：实现了resolver.Resolver接口，模拟服务发现过程。在实际应用中，可以从服务注册中心（如etcd、Consul）动态获取服务实例列表。</li>
+</ol>
+<p>注册解析器：使用resolver.Register注册自定义解析器，指定Scheme为custom。</p>
+<p>自定义负载均衡器 (roundRobinBalancer)：实现了balancer.Picker接口，通过原子操作实现轮询的负载均衡策略。</p>
+<p>注册负载均衡器：使用balancer.Register将自定义的负载均衡器注册到gRPC系统中。</p>
+<p>创建gRPC连接：在grpc.Dial中指定使用自定义的Scheme和负载均衡器。</p>
+<p>发起请求：通过gRPC客户端不断发起请求，验证负载均衡效果。</p>
+<p>注意事项
+服务发现的动态性：在实际应用中，服务实例可能会动态上线或下线。因此，解析器应支持动态更新地址列表，并通知gRPC客户端更新状态。</p>
+<p>错误处理：在负载均衡器的Pick方法中，应处理可能的错误情况，如所有SubConn不可用等。</p>
+<p>性能优化：对于高并发场景，应确保负载均衡器的高性能，避免成为系统瓶颈。</p>
+<p>服务发现的实现
+服务发现是负载均衡的前提，客户端需要通过某种方式获取当前可用的服务实例列表。常见的服务发现方式包括：</p>
+<p>静态配置：适用于实例数量固定且变化不频繁的场景，但不适应动态扩展。</p>
+<p>使用服务注册中心：如etcd、Consul、Zookeeper等，能够动态管理服务实例，适应大规模分布式系统。</p>
+<p>以下是使用etcd实现服务发现的简要示例。</p>
+<h4 id="使用etcd实现动态服务发现">使用etcd实现动态服务发现</h4>
+<ol>
+<li>服务注册
+在每个服务实例启动时，将自己的地址注册到etcd中，并定期发送心跳以维持注册状态。</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;context&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;fmt&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;log&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;time&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">clientv3</span> <span style="color:#e6db74">&#34;go.etcd.io/etcd/client/v3&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cli</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">clientv3</span>.<span style="color:#a6e22e">New</span>(<span style="color:#a6e22e">clientv3</span>.<span style="color:#a6e22e">Config</span>{
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">Endpoints</span>:   []<span style="color:#66d9ef">string</span>{<span style="color:#e6db74">&#34;localhost:2379&#34;</span>},
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">DialTimeout</span>: <span style="color:#ae81ff">5</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>,
+</span></span><span style="display:flex;"><span>    })
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">cli</span>.<span style="color:#a6e22e">Close</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">lease</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">cli</span>.<span style="color:#a6e22e">Grant</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>(), <span style="color:#ae81ff">5</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">cli</span>.<span style="color:#a6e22e">Put</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>(), <span style="color:#e6db74">&#34;/services/myService/instance1&#34;</span>, <span style="color:#e6db74">&#34;localhost:50051&#34;</span>, <span style="color:#a6e22e">clientv3</span>.<span style="color:#a6e22e">WithLease</span>(<span style="color:#a6e22e">lease</span>.<span style="color:#a6e22e">ID</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 定期续租
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">ch</span>, <span style="color:#a6e22e">kaerr</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">cli</span>.<span style="color:#a6e22e">KeepAlive</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>(), <span style="color:#a6e22e">lease</span>.<span style="color:#a6e22e">ID</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">kaerr</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">kaerr</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">ch</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Lease renewed&#34;</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ol start="2">
+<li>客户端解析器从etcd获取服务列表
+在自定义解析器中，通过etcd监听服务实例的变更，动态更新gRPC客户端的地址列表。</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">customResolver</span>) <span style="color:#a6e22e">Start</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 初始化获取所有实例
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">resp</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">cli</span>.<span style="color:#a6e22e">Get</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>(), <span style="color:#e6db74">&#34;/services/myService/&#34;</span>, <span style="color:#a6e22e">clientv3</span>.<span style="color:#a6e22e">WithPrefix</span>())
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Error getting services:&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">kv</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">resp</span>.<span style="color:#a6e22e">Kvs</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">addrs</span> = append(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">addrs</span>, <span style="color:#a6e22e">resolver</span>.<span style="color:#a6e22e">Address</span>{<span style="color:#a6e22e">Addr</span>: string(<span style="color:#a6e22e">kv</span>.<span style="color:#a6e22e">Value</span>)})
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">cc</span>.<span style="color:#a6e22e">UpdateState</span>(<span style="color:#a6e22e">resolver</span>.<span style="color:#a6e22e">State</span>{<span style="color:#a6e22e">Addresses</span>: <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">addrs</span>})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 监听服务变更
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">watchChan</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">cli</span>.<span style="color:#a6e22e">Watch</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>(), <span style="color:#e6db74">&#34;/services/myService/&#34;</span>, <span style="color:#a6e22e">clientv3</span>.<span style="color:#a6e22e">WithPrefix</span>())
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">watchResp</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">watchChan</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">ev</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">watchResp</span>.<span style="color:#a6e22e">Events</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">switch</span> <span style="color:#a6e22e">ev</span>.<span style="color:#a6e22e">Type</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">clientv3</span>.<span style="color:#a6e22e">EventTypePut</span>:
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">addrs</span> = append(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">addrs</span>, <span style="color:#a6e22e">resolver</span>.<span style="color:#a6e22e">Address</span>{<span style="color:#a6e22e">Addr</span>: string(<span style="color:#a6e22e">ev</span>.<span style="color:#a6e22e">Kv</span>.<span style="color:#a6e22e">Value</span>)})
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">clientv3</span>.<span style="color:#a6e22e">EventTypeDelete</span>:
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">// 从r.addrs中移除
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                }
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">cc</span>.<span style="color:#a6e22e">UpdateState</span>(<span style="color:#a6e22e">resolver</span>.<span style="color:#a6e22e">State</span>{<span style="color:#a6e22e">Addresses</span>: <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">addrs</span>})
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>注意事项</p>
+<ol>
+<li>
+<p>高可用性：etcd集群应部署在高可用环境中，确保服务发现的可靠性。</p>
+</li>
+<li>
+<p>性能监控：监控etcd的性能，避免成为系统的瓶颈。</p>
+</li>
+<li>
+<p>安全性：在生产环境中，确保etcd的通信安全，如使用TLS加密等。</p>
+</li>
+</ol>
+<h3 id="实践中的问题与思考">实践中的问题与思考</h3>
+<ol>
+<li>服务实例变更的延迟
+由于服务实例列表的变更需要通过服务注册中心传播到客户端，存在一定的延迟。这在高动态的环境中可能导致负载均衡策略不够及时，影响系统性能。</li>
+</ol>
+<p>解决方案：优化服务注册与发现的频率，结合长连接和订阅机制，减少更新延迟。</p>
+<ol start="2">
+<li>负载均衡策略的选择
+不同的负载均衡策略适用于不同的场景。例如，Round Robin适用于均匀负载，但在实例性能不一致时可能导致问题。</li>
+</ol>
+<p>解决方案：根据实际业务需求选择合适的负载均衡策略，甚至自定义混合策略，如加权Round Robin。</p>
+<ol start="3">
+<li>错误处理与重试机制
+在客户端负载均衡中，某些服务实例可能宕机或不可用，如何有效处理这些错误并进行重试，是一个关键问题。</li>
+</ol>
+<p>解决方案：在负载均衡器中集成健康检查机制，实时剔除不可用实例，并结合适当的重试策略，确保请求的可靠性。</p>
+<ol start="4">
+<li>与中间件的集成
+在实际微服务架构中，gRPC客户端通常与其他中间件（如熔断器、限流器）配合使用，如何协调这些组件的工作，是设计的一个挑战。</li>
+</ol>
+<p>解决方案：采用模块化设计，确保各组件之间的低耦合，通过接口规范进行集成。</p>
+<h3 id="结论">结论</h3>
+<p>gRPC在分布式系统中的负载均衡和服务发现是实现高性能、高可用微服务架构的关键。通过客户端负载均衡，结合动态服务发现机制，可以有效分配请求负载，提高系统的灵活性和扩展性。然而，在实际应用中，需要充分考虑服务实例的动态性、负载均衡策略的选择以及与其他中间件的集成等问题。希望本文的实践经验和示例代码，能够为正在使用或准备使用gRPC的开发者提供一些有益的参考。</p>
 </section>
 
   
@@ -328,10 +685,6 @@ http2 为了更加深入的了解，我们从http2开始说起。">
   <nav
     class="mt-24 flex overflow-hidden rounded-xl bg-black/[3%] text-lg !leading-[1.2] *:flex *:w-1/2 *:items-center *:p-5 *:font-medium *:no-underline dark:bg-white/[8%] [&>*:hover]:bg-black/[2%] dark:[&>*:hover]:bg-white/[3%]"
   >
-    
-    <a class="ltr:pr-3 rtl:pl-3" href="https://yafeiaa.github.io/posts/etcd%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83/"
-      ><span class="ltr:mr-1.5 rtl:ml-1.5">←</span><span>gRPC的负载均衡和服务发现</span></a
-    >
     
     
     <a class="ltr:ml-auto rtl:mr-auto justify-end pl-3" href="https://yafeiaa.github.io/posts/drf%E5%B8%B8%E8%A7%81%E8%A7%86%E5%9B%BE%E5%89%96%E6%9E%90/"
