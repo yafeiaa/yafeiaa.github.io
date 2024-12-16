@@ -60,13 +60,7 @@
   
   
   
-  <meta name="description" content="
-问题描述
-问题分析
-解决方案
-优化效果
-优化总结
-
+  <meta name="description" content="本文主要介绍我在golang项目中遇到的一个json.Marshal导致的内存占用大的问题，以及解决思路和方案。
 问题描述
 在我的一个golang项目中，其中有一个http服务，它提供的api接口需要返回一些数Mb级别的json数据，在很长的一段时间内都能正常使用，但是随着业务的增长，发现这个服务使用的内存越来越大，从最开始的2gb规模增长到了10gb甚至更高，而且随着时间的推移，内存占用还在不断增长，最终导致服务OOM、进程被kill。
 
@@ -133,7 +127,9 @@ golang反射性能的问题
 json-iterator
 
 
-sonic" />
+sonic
+
+" />
   <meta name="author" content="yafeiaa" />
   
 
@@ -199,7 +195,8 @@ sonic" />
   
   
   <meta itemprop="name" content="Golang| golang项目中对json处理的优化">
-  <meta itemprop="description" content="问题描述 问题分析 解决方案 优化效果 优化总结 问题描述 在我的一个golang项目中，其中有一个http服务，它提供的api接口需要返回一些数Mb级别的json数据，在很长的一段时间内都能正常使用，但是随着业务的增长，发现这个服务使用的内存越来越大，从最开始的2gb规模增长到了10gb甚至更高，而且随着时间的推移，内存占用还在不断增长，最终导致服务OOM、进程被kill。
+  <meta itemprop="description" content="本文主要介绍我在golang项目中遇到的一个json.Marshal导致的内存占用大的问题，以及解决思路和方案。
+问题描述 在我的一个golang项目中，其中有一个http服务，它提供的api接口需要返回一些数Mb级别的json数据，在很长的一段时间内都能正常使用，但是随着业务的增长，发现这个服务使用的内存越来越大，从最开始的2gb规模增长到了10gb甚至更高，而且随着时间的推移，内存占用还在不断增长，最终导致服务OOM、进程被kill。
 问题分析 为了解决这个问题，我首先通过监控面板对比了该服务器的几个指标：
 CPU使用量 内存使用量 goroutines 向操作系统请求的内存量 在某个内存增长的点，这些指标的值变化如下图：
 可以在图上看到，内存使用量增长的时候，cpu使用量在增长、向操作系统请求的内存量也在增长。但是goroutines没有明显变化。
@@ -227,12 +224,13 @@ json-iterator
 sonic">
   <meta itemprop="datePublished" content="2024-12-16T16:36:15+08:00">
   <meta itemprop="dateModified" content="2024-12-16T16:36:15+08:00">
-  <meta itemprop="wordCount" content="69">
+  <meta itemprop="wordCount" content="65">
   
   <meta property="og:url" content="https://yafeiaa.github.io/posts/golang%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%AF%B9json%E5%A4%84%E7%90%86%E7%9A%84%E4%BC%98%E5%8C%96/">
   <meta property="og:site_name" content="yafeiaa Blogs">
   <meta property="og:title" content="Golang| golang项目中对json处理的优化">
-  <meta property="og:description" content="问题描述 问题分析 解决方案 优化效果 优化总结 问题描述 在我的一个golang项目中，其中有一个http服务，它提供的api接口需要返回一些数Mb级别的json数据，在很长的一段时间内都能正常使用，但是随着业务的增长，发现这个服务使用的内存越来越大，从最开始的2gb规模增长到了10gb甚至更高，而且随着时间的推移，内存占用还在不断增长，最终导致服务OOM、进程被kill。
+  <meta property="og:description" content="本文主要介绍我在golang项目中遇到的一个json.Marshal导致的内存占用大的问题，以及解决思路和方案。
+问题描述 在我的一个golang项目中，其中有一个http服务，它提供的api接口需要返回一些数Mb级别的json数据，在很长的一段时间内都能正常使用，但是随着业务的增长，发现这个服务使用的内存越来越大，从最开始的2gb规模增长到了10gb甚至更高，而且随着时间的推移，内存占用还在不断增长，最终导致服务OOM、进程被kill。
 问题分析 为了解决这个问题，我首先通过监控面板对比了该服务器的几个指标：
 CPU使用量 内存使用量 goroutines 向操作系统请求的内存量 在某个内存增长的点，这些指标的值变化如下图：
 可以在图上看到，内存使用量增长的时候，cpu使用量在增长、向操作系统请求的内存量也在增长。但是goroutines没有明显变化。
@@ -268,7 +266,8 @@ sonic">
   
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Golang| golang项目中对json处理的优化">
-  <meta name="twitter:description" content="问题描述 问题分析 解决方案 优化效果 优化总结 问题描述 在我的一个golang项目中，其中有一个http服务，它提供的api接口需要返回一些数Mb级别的json数据，在很长的一段时间内都能正常使用，但是随着业务的增长，发现这个服务使用的内存越来越大，从最开始的2gb规模增长到了10gb甚至更高，而且随着时间的推移，内存占用还在不断增长，最终导致服务OOM、进程被kill。
+  <meta name="twitter:description" content="本文主要介绍我在golang项目中遇到的一个json.Marshal导致的内存占用大的问题，以及解决思路和方案。
+问题描述 在我的一个golang项目中，其中有一个http服务，它提供的api接口需要返回一些数Mb级别的json数据，在很长的一段时间内都能正常使用，但是随着业务的增长，发现这个服务使用的内存越来越大，从最开始的2gb规模增长到了10gb甚至更高，而且随着时间的推移，内存占用还在不断增长，最终导致服务OOM、进程被kill。
 问题分析 为了解决这个问题，我首先通过监控面板对比了该服务器的几个指标：
 CPU使用量 内存使用量 goroutines 向操作系统请求的内存量 在某个内存增长的点，这些指标的值变化如下图：
 可以在图上看到，内存使用量增长的时候，cpu使用量在增长、向操作系统请求的内存量也在增长。但是goroutines没有明显变化。
@@ -432,13 +431,7 @@ sonic">
     
   </header>
 
-  <section><ul>
-<li>问题描述</li>
-<li>问题分析</li>
-<li>解决方案</li>
-<li>优化效果</li>
-<li>优化总结</li>
-</ul>
+  <section><p>本文主要介绍我在golang项目中遇到的一个json.Marshal导致的内存占用大的问题，以及解决思路和方案。</p>
 <h2 id="问题描述">问题描述</h2>
 <p>在我的一个golang项目中，其中有一个http服务，它提供的api接口需要返回一些数Mb级别的json数据，在很长的一段时间内都能正常使用，但是随着业务的增长，发现这个服务使用的内存越来越大，从最开始的2gb规模增长到了10gb甚至更高，而且随着时间的推移，内存占用还在不断增长，最终导致服务OOM、进程被kill。</p>
 <p><img src="/image/golang-memory.png" alt="内存使用量"></p>
