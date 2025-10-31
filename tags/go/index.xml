@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Go on yafeiaa Blogs</title>
+    <link>https://yafeiaa.github.io/tags/go/</link>
+    <description>Recent content in Go on yafeiaa Blogs</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 31 Oct 2025 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://yafeiaa.github.io/tags/go/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Go 服务性能优化实战：从 pprof 分析到落地方案</title>
+      <link>https://yafeiaa.github.io/posts/go-performance-optimization-from-pprof-to-practice/</link>
+      <pubDate>Fri, 31 Oct 2025 00:00:00 +0000</pubDate>
+      <guid>https://yafeiaa.github.io/posts/go-performance-optimization-from-pprof-to-practice/</guid>
+      <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;&#xA;&lt;p&gt;在生产环境中，Go 服务的性能问题往往不是单一原因造成的。本文基于真实的性能优化经验，通过 pprof 工具分析一个高并发 gRPC 服务的性能瓶颈，并给出具体的优化方案和代码实现。&lt;/p&gt;&#xA;&lt;p&gt;&lt;strong&gt;优化成果&lt;/strong&gt;：&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;CPU 使用率降低 30-50%&lt;/li&gt;&#xA;&lt;li&gt;内存对象数降低 65-95%&lt;/li&gt;&#xA;&lt;li&gt;P99 延迟降低 35-55%&lt;/li&gt;&#xA;&lt;li&gt;QPS 提升 50-80%&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;h2 id=&#34;一性能分析的正确姿势&#34;&gt;一、性能分析的正确姿势&lt;/h2&gt;&#xA;&lt;h3 id=&#34;11-pprof-数据的类型&#34;&gt;1.1 pprof 数据的类型&lt;/h3&gt;&#xA;&lt;p&gt;Go 的 pprof 提供了多个维度的 profile 数据：&lt;/p&gt;&#xA;&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;┌─────────────────────────────────────────────────────┐&#xA;│                  pprof 数据类型                       │&#xA;├─────────────────────────────────────────────────────┤&#xA;│ CPU Profile      │ 程序运行时 CPU 占用情况            │&#xA;│ Heap (inuse)     │ 当前正在使用的内存                │&#xA;│ Heap (alloc)     │ 历史累计的内存分配                │&#xA;│ Goroutine        │ 当前 goroutine 的数量和状态       │&#xA;│ Block            │ 同步原语（锁）的阻塞情况           │&#xA;│ Mutex            │ 互斥锁的竞争情况                  │&#xA;└─────────────────────────────────────────────────────┘&#xA;&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;关键洞察&lt;/strong&gt;：不同的 profile 数据能揭示不同的问题&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
